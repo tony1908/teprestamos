@@ -7,13 +7,15 @@ import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { AdminControls } from '@/components/AdminControls';
 
 export default function ProfileScreen() {
   const { address } = useAccount();
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#202020', dark: '#202020' }}>
+      headerBackgroundColor={{ light: '#202020', dark: '#202020' }}
+      headerImage={<View style={{ height: 178, backgroundColor: '#202020' }} />}>
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Te Prestamos</ThemedText>
         <ThemedText type="subtitle">Decentralized Lending Platform</ThemedText>
@@ -65,6 +67,8 @@ export default function ProfileScreen() {
         <ThemedText style={styles.walletTitle}>Wallet Management</ThemedText>
         <AppKitButton connectStyle={styles.appKitButton} />
       </View>
+
+      <AdminControls />
     </ParallaxScrollView>
   );
 }

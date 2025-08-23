@@ -71,6 +71,41 @@ export function LoanItem({loan, onUpdate}: Props) {
     }
   };
 
+  const markAsDefaulted = async () => {
+    if (!walletClient || !address) {
+      return;
+    }
+
+    setData(undefined);
+    setError(false);
+    setIsLoading(true);
+    setRequestModalVisible(true);
+
+    try {
+      const ethersProvider = new BrowserProvider(walletClient!);
+      const signer = await ethersProvider.getSigner();
+      const contract = new Contract(
+        LOAN_CONTRACT_ADDRESS,
+        loanContractABI,
+        signer,
+      );
+
+      // Call updateLoanStatus to mark as defaulted (status 3)
+      const tx = await contract.updateLoanStatus(address, 3);
+      
+      setData(
+        `Loan marked as defaulted. Transaction hash: ${tx.hash}\nKiosk mode will be activated.`,
+      );
+      onUpdate();
+    } catch (e: any) {
+      console.error(e);
+      setError(true);
+      setData(`Error: ${e.message || 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString();
   };
@@ -174,21 +209,32 @@ export function LoanItem({loan, onUpdate}: Props) {
       
       <View style={styles.footer}>
         {loan.status === 0 || loan.status === 1 ? (
-          <TouchableOpacity
-            style={[styles.button, styles.payButton]}
-            onPress={payBackLoan}
-            disabled={isLoading}>
-            <Text style={styles.buttonText}>
-              {isLoading ? 'Paying...' : 'Pay Back Loan'}
-            </Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={[styles.button, styles.payButton]}
+              onPress={payBackLoan}
+              disabled={isLoading}>
+              <Text style={styles.buttonText}>
+                {isLoading ? 'Paying...' : 'Pay Back Loan'}
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.button, styles.defaultButton, {marginTop: 8}]}
+              onPress={markAsDefaulted}
+              disabled={isLoading}>
+              <Text style={styles.defaultButtonText}>
+                {isLoading ? 'Processing...' : '⚠️ Mark as Defaulted (Test)'}
+              </Text>
+            </TouchableOpacity>
+          </>
         ) : loan.status === 2 ? (
           <View style={[styles.button, styles.repaidButton]}>
             <Text style={styles.repaidButtonText}>✓ Paid</Text>
           </View>
         ) : (
           <View style={[styles.button, styles.defaultedButton]}>
-            <Text style={styles.defaultedButtonText}>Defaulted</Text>
+            <Text style={styles.defaultedButtonText}>Defaulted - Device Locked</Text>
           </View>
         )}
       </View>
@@ -305,6 +351,9 @@ const styles = StyleSheet.create({
   payButton: {
     backgroundColor: '#4CAF50',
   },
+  defaultButton: {
+    backgroundColor: '#f44336',
+  },
   pendingButton: {
     backgroundColor: '#ff9800',
   },
@@ -317,6 +366,11 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  defaultButtonText: {
+    color: 'white',
+    fontSize: 14,
     fontWeight: '600',
   },
   pendingButtonText: {

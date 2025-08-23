@@ -17,7 +17,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.toony1908.myappmonad"
+      "package": "com.toony1908.myappmonad",
+      "permissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.BIND_DEVICE_ADMIN"
+      ]
     },
     "web": {
       "bundler": "metro",

@@ -18,6 +18,9 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { View } from "react-native";
 import LoginScreen from '@/components/LoginScreen';
+import { KioskProvider, useKioskContext } from '@/contexts/KioskContext';
+import KioskModeScreen from '@/components/KioskModeScreen';
+import { ethers } from 'ethers';
 
 // 0. Setup queryClient
 const queryClient = new QueryClient();
@@ -58,6 +61,25 @@ function AppContent() {
   
   if (!isConnected) {
     return <LoginScreen />;
+  }
+
+  return (
+    <KioskProvider>
+      <MainApp />
+    </KioskProvider>
+  );
+}
+
+function MainApp() {
+  const { isKioskModeActive, defaultedLoan, handlePaymentAttempt } = useKioskContext();
+  
+  if (isKioskModeActive && defaultedLoan) {
+    return (
+      <KioskModeScreen
+        loanAmount={ethers.formatEther(defaultedLoan.amount)}
+        onPaymentRequired={handlePaymentAttempt}
+      />
+    );
   }
 
   return (
