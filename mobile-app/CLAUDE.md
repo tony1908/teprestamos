@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a React Native Expo app called "Monad Todo" - a stake-to-commit todo application built for the Monad blockchain testnet. Users stake MON tokens when creating todos and get their stake back upon completion.
+This is a React Native Expo app called "Te Prestamos" - a decentralized lending platform built for the Monad blockchain testnet. Users can request instant MON token loans with flexible repayment terms.
 
 **Key Technologies:**
 - **Frontend**: React Native with Expo Router (file-based routing)
@@ -34,11 +34,11 @@ npx tsc --noEmit   # TypeScript type checking
 
 ### App Structure
 - **File-based routing** with Expo Router in `/app` directory
-- **Two-tab layout**: Home, Todos
+- **Two-tab layout**: Home, Loans
 - **Component hierarchy**: 
   - Root layout (`app/_layout.tsx`) configures Wagmi, AppKit, and theme providers
   - Tab layout (`app/(tabs)/_layout.tsx`) defines tab navigation
-  - Todo functionality isolated in `components/todo/`
+  - Loan functionality in `components/loan/`
 
 ### Web3 Integration Architecture
 
@@ -49,29 +49,38 @@ The app uses a **dual Web3 stack approach**:
 **Key Configuration** (`app/_layout.tsx`):
 - Wagmi config with Mainnet + Monad Testnet
 - AppKit setup for wallet connectivity with embedded wallets support via `authConnector`
-- Custom metadata for "Monad Todo" branding
+- Custom metadata for "Te Prestamos" branding
 - Deep linking scheme: `appkitexpowagmi://`
 
 ### Smart Contract Integration
 
 **Contract Details**:
-- **Address**: `0xd880112AeC1307eBE2886e4fB0daec82564f3a65`
-- **ABI**: Defined in `utils/stakingTodoListABI.ts`
+- **Address**: `0x56aeB0d91ED01C1cfED201f252E16C90720F1961`
+- **ABI**: Defined in `utils/loanContractABI.ts`
 - **Network**: Monad Testnet (Chain ID: 10143)
 
 **Core Functions**:
-- `createTodo(string description) payable` - Create todo with MON stake
-- `completeTodo(uint256 todoId)` - Complete todo and retrieve stake
-- `getUserTodoDetails(address user)` - Get user's todos with full details
-- `minimumStake()` - Get minimum required stake amount
+- `requestLoan(uint256 amount, uint256 maxPaymentDate)` - Request and receive instant loan
+- `payBackLoan() payable` - Repay the loan amount
+- `getActiveLoan(address borrower)` - Get user's active loan details
+- `getContractBalance()` - Get available contract funds
 
-### Todo Component Architecture
+**Loan Status Enum**:
+```solidity
+enum LoanStatus { ACTIVE, OVERDUE, PAID, DEFAULTED }
+```
+- **0 (ACTIVE)**: Loan approved and funded, can be repaid
+- **1 (OVERDUE)**: Loan past due date, can still be repaid
+- **2 (PAID)**: Loan successfully repaid
+- **3 (DEFAULTED)**: Loan defaulted (read-only)
+
+### Loan Component Architecture
 
 **Component Hierarchy**:
 ```
-TodoList (main view)
-├── CreateTodo (todo creation form)
-├── TodoItem[] (individual todo items)
+LoanList (main view)
+├── CreateLoan (loan request form)
+├── LoanItem (individual loan display)
 └── RequestModal (transaction feedback)
 ```
 
@@ -131,8 +140,31 @@ const tx = await contract.methodName(params, { value: ethAmount });
 
 ## Contract Interaction Patterns
 
-**Read Operations**: Use contract view functions for fetching user todos, stats, and minimum stake amounts.
+**Read Operations**: Use contract view functions for fetching user loan details, contract balance, and loan status.
 
 **Write Operations**: All state-changing operations use the RequestModal pattern for user feedback and include proper gas estimation.
 
-**State Synchronization**: After successful transactions, components trigger refresh of both local todo list and contract statistics.
+**State Synchronization**: After successful transactions, components trigger refresh of both loan data and contract statistics.
+
+## Loan App Specific Features
+
+**Instant Loan Approval**:
+- `requestLoan()` method immediately approves and transfers funds to borrower
+- No waiting period or manual approval process
+- Users receive MON tokens instantly upon transaction confirmation
+
+**Single Active Loan Policy**:
+- Users can only have one active loan at a time
+- Must repay current loan before requesting a new one
+- Contract enforces this via `hasNoActiveLoan` modifier
+
+**Loan Management**:
+- Automatic overdue detection based on `maxPaymentDate`
+- Visual indicators for loan status (Active, Overdue, Paid, Defaulted)
+- Flexible repayment terms (1-30 days, up to 10 MON)
+
+**UI/UX Patterns**:
+- Instant feedback for all loan operations
+- Status-based conditional rendering
+- Overdue warnings with countdown timers
+- Disabled states for invalid operations
