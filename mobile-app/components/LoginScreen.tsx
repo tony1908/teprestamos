@@ -1,5 +1,4 @@
 import { AppKitButton } from '@reown/appkit-wagmi-react-native';
-import { Image } from 'expo-image';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -11,10 +10,6 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <Image
-          source={require('@/assets/images/reown-header.png')}
-          style={styles.reownLogo}
-        />
       </View>
       
       <ThemedView style={styles.contentContainer}>
@@ -67,10 +62,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-  },
-  reownLogo: {
-    height: 150,
-    width: 240,
   },
   contentContainer: {
     flex: 1,

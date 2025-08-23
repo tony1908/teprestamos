@@ -23,7 +23,7 @@ import LoginScreen from '@/components/LoginScreen';
 const queryClient = new QueryClient();
 
 // 1. Get projectId at https://dashboard.reown.com
-const projectId = ""; // This project ID will only work for Expo Go. Use your own project ID for production.
+const projectId = ""; // Demo project ID for development
 
 // 2. Create config
 const metadata = {
