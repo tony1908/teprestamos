@@ -7,7 +7,6 @@ import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { AdminControls } from '@/components/AdminControls';
 
 export default function ProfileScreen() {
   const { address } = useAccount();
@@ -67,8 +66,6 @@ export default function ProfileScreen() {
         <ThemedText style={styles.walletTitle}>Wallet Management</ThemedText>
         <AppKitButton connectStyle={styles.appKitButton} />
       </View>
-
-      <AdminControls />
     </ParallaxScrollView>
   );
 }
