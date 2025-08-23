@@ -27,20 +27,6 @@ export function LoanList() {
   const {address, isConnected} = useAccount();
   const {data: walletClient} = useWalletClient();
 
-  useEffect(() => {
-    console.log('LoanList useEffect:', {isConnected, hasProvider: !!walletClient, address});
-    setError(null);
-    
-    if (isConnected && walletClient && address) {
-      loadLoan();
-      loadContractStats();
-    } else {
-      setLoan(null);
-      setContractStats({contractBalance: '0'});
-      setLoading(false);
-    }
-  }, [isConnected, walletClient, address, loadLoan, loadContractStats]);
-
   const loadLoan = useCallback(async () => {
     if (!walletClient || !address) {
       console.log('loadLoan: Missing provider or address');
@@ -163,6 +149,20 @@ export function LoanList() {
     }
   }, [walletClient, address]);
 
+  useEffect(() => {
+    console.log('LoanList useEffect:', {isConnected, hasProvider: !!walletClient, address});
+    setError(null);
+    
+    if (isConnected && walletClient && address) {
+      loadLoan();
+      loadContractStats();
+    } else {
+      setLoan(null);
+      setContractStats({contractBalance: '0'});
+      setLoading(false);
+    }
+  }, [isConnected, walletClient, address, loadLoan, loadContractStats]);
+
   const handleLoanCreated = () => {
     loadLoan();
     loadContractStats();
@@ -201,7 +201,7 @@ export function LoanList() {
           onPress={() => setShowCreateForm(!showCreateForm)}
           disabled={!!loan}>
           <Text style={styles.createButtonText}>
-            {showCreateForm ? '✕ Cancel' : '+ Request Loan'}
+            {showCreateForm ? '✕ Cancel' : '+ Get Loan'}
           </Text>
         </TouchableOpacity>
         
@@ -213,7 +213,7 @@ export function LoanList() {
       {loan && (
         <View style={styles.warningContainer}>
           <Text style={styles.warningText}>
-            You can only have one active loan at a time. Pay back your current loan to request a new one.
+            You can only have one active loan at a time. Pay back your current loan to get a new one.
           </Text>
         </View>
       )}

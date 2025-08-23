@@ -39,7 +39,7 @@ export default function HomeScreen() {
         
         <ThemedView style={styles.descriptionContainer}>
           <ThemedText style={styles.descriptionText}>
-            Need a quick loan? Head over to the Loans tab to request one!
+            Need a quick loan? Head over to the Loans tab to get one instantly!
           </ThemedText>
         </ThemedView>
 
@@ -48,15 +48,15 @@ export default function HomeScreen() {
             <ThemedText style={styles.featureIcon}>💰</ThemedText>
             <ThemedText style={styles.featureTitle}>Request Loans</ThemedText>
             <ThemedText style={styles.featureDescription}>
-              Request MON token loans with flexible repayment terms
+              Get instant MON token loans with flexible repayment terms
             </ThemedText>
           </View>
           
           <View style={styles.featureCard}>
             <ThemedText style={styles.featureIcon}>⏰</ThemedText>
-            <ThemedText style={styles.featureTitle}>Fast Approval</ThemedText>
+            <ThemedText style={styles.featureTitle}>Instant Funding</ThemedText>
             <ThemedText style={styles.featureDescription}>
-              Get your loan approved quickly by the platform
+              Loans are automatically approved and funded immediately
             </ThemedText>
           </View>
           

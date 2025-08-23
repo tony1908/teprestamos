@@ -58,7 +58,7 @@ export function CreateLoan({onLoanCreated}: Props) {
       
       console.log('CreateLoan: Transaction sent:', tx.hash);
       setData(
-        `Loan requested successfully! Transaction hash: ${tx.hash}\nAmount: ${amount} MON\nDue in: ${days} days`,
+        `Loan approved and funded! Transaction hash: ${tx.hash}\nAmount: ${amount} MON received\nDue in: ${days} days`,
       );
       setAmount('0.1');
       setDays('7');
@@ -103,7 +103,7 @@ export function CreateLoan({onLoanCreated}: Props) {
     return (
       <View style={styles.container}>
         <Text style={styles.connectMessage}>
-          Connect your wallet to request a loan
+          Connect your wallet to get an instant loan
         </Text>
       </View>
     );
@@ -111,7 +111,7 @@ export function CreateLoan({onLoanCreated}: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Request New Loan</Text>
+      <Text style={styles.title}>Get Instant Loan</Text>
       
       <Text style={styles.label}>
         Amount (MON) - Max: 10 MON
@@ -144,14 +144,14 @@ export function CreateLoan({onLoanCreated}: Props) {
         onPress={requestLoan}
         disabled={!isValidAmount() || !isValidDays() || isLoading}>
         <Text style={styles.buttonText}>
-          {isLoading ? 'Requesting...' : 'Request Loan'}
+          {isLoading ? 'Processing...' : 'Get Loan Now'}
         </Text>
       </TouchableOpacity>
 
       <View style={styles.infoContainer}>
         <Text style={styles.infoTitle}>Important:</Text>
         <Text style={styles.infoText}>
-          • Loans must be approved by the contract owner
+          • Loans are instantly approved and funded
         </Text>
         <Text style={styles.infoText}>
           • You can only have one active loan at a time
@@ -165,7 +165,7 @@ export function CreateLoan({onLoanCreated}: Props) {
         isVisible={requestModalVisible}
         isLoading={isLoading}
         rpcResponse={data}
-        rpcError={error ? 'Error requesting loan' : undefined}
+        rpcError={error ? 'Error processing loan' : undefined}
         onClose={() => setRequestModalVisible(false)}
       />
     </View>

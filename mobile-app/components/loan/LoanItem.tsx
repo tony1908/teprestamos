@@ -11,7 +11,7 @@ import {
 export interface LoanItemData {
   amount: string;
   maxPaymentDate: number;
-  status: number; // 0: Requested, 1: Approved, 2: Repaid
+  status: number; // 0: Active, 1: Overdue, 2: Paid, 3: Defaulted
   createdAt: number;
   isOverdue: boolean;
 }
@@ -30,7 +30,7 @@ export function LoanItem({loan, onUpdate}: Props) {
   const {data: walletClient} = useWalletClient();
 
   const payBackLoan = async () => {
-    if (!walletClient || loan.status !== 1 || !address) {
+    if (!walletClient || (loan.status !== 0 && loan.status !== 1) || !address) {
       return;
     }
 
@@ -82,11 +82,13 @@ export function LoanItem({loan, onUpdate}: Props) {
   const getStatusText = (status: number) => {
     switch (status) {
       case 0:
-        return 'Requested';
+        return 'Active';
       case 1:
-        return 'Approved';
+        return 'Overdue';
       case 2:
-        return 'Repaid';
+        return 'Paid';
+      case 3:
+        return 'Defaulted';
       default:
         return 'Unknown';
     }
@@ -95,11 +97,13 @@ export function LoanItem({loan, onUpdate}: Props) {
   const getStatusColor = (status: number) => {
     switch (status) {
       case 0:
-        return '#ff9800'; // Orange for requested
+        return '#4CAF50'; // Green for active
       case 1:
-        return '#4CAF50'; // Green for approved
+        return '#f44336'; // Red for overdue
       case 2:
-        return '#2196F3'; // Blue for repaid
+        return '#2196F3'; // Blue for paid
+      case 3:
+        return '#9e9e9e'; // Gray for defaulted
       default:
         return '#999';
     }
@@ -150,7 +154,7 @@ export function LoanItem({loan, onUpdate}: Props) {
         </Text>
       </View>
 
-      {loan.status === 1 && (
+      {(loan.status === 0 || loan.status === 1) && (
         <View style={styles.detailsContainer}>
           <Text style={styles.detailLabel}>Time Remaining:</Text>
           <Text style={[
@@ -162,14 +166,14 @@ export function LoanItem({loan, onUpdate}: Props) {
         </View>
       )}
 
-      {loan.isOverdue && loan.status === 1 && (
+      {loan.isOverdue && (loan.status === 0 || loan.status === 1) && (
         <View style={styles.warningContainer}>
           <Text style={styles.warningText}>⚠️ Loan is overdue!</Text>
         </View>
       )}
       
       <View style={styles.footer}>
-        {loan.status === 1 ? (
+        {loan.status === 0 || loan.status === 1 ? (
           <TouchableOpacity
             style={[styles.button, styles.payButton]}
             onPress={payBackLoan}
@@ -178,13 +182,13 @@ export function LoanItem({loan, onUpdate}: Props) {
               {isLoading ? 'Paying...' : 'Pay Back Loan'}
             </Text>
           </TouchableOpacity>
-        ) : loan.status === 0 ? (
-          <View style={[styles.button, styles.pendingButton]}>
-            <Text style={styles.pendingButtonText}>Awaiting Approval</Text>
+        ) : loan.status === 2 ? (
+          <View style={[styles.button, styles.repaidButton]}>
+            <Text style={styles.repaidButtonText}>✓ Paid</Text>
           </View>
         ) : (
-          <View style={[styles.button, styles.repaidButton]}>
-            <Text style={styles.repaidButtonText}>✓ Repaid</Text>
+          <View style={[styles.button, styles.defaultedButton]}>
+            <Text style={styles.defaultedButtonText}>Defaulted</Text>
           </View>
         )}
       </View>
@@ -307,6 +311,9 @@ const styles = StyleSheet.create({
   repaidButton: {
     backgroundColor: '#2196F3',
   },
+  defaultedButton: {
+    backgroundColor: '#9e9e9e',
+  },
   buttonText: {
     color: 'white',
     fontSize: 16,
@@ -318,6 +325,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   repaidButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  defaultedButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
