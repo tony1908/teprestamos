@@ -34,11 +34,12 @@ npx tsc --noEmit   # TypeScript type checking
 
 ### App Structure
 - **File-based routing** with Expo Router in `/app` directory
-- **Two-tab layout**: Home, Loans
+- **Two-tab layout**: Loans, Profile
 - **Component hierarchy**: 
-  - Root layout (`app/_layout.tsx`) configures Wagmi, AppKit, and theme providers
+  - Root layout (`app/_layout.tsx`) configures Wagmi, AppKit, KioskProvider, and theme providers
   - Tab layout (`app/(tabs)/_layout.tsx`) defines tab navigation
   - Loan functionality in `components/loan/`
+  - Kiosk mode system in `components/KioskModeScreen.tsx`, `contexts/KioskContext.tsx`, `hooks/useKioskMode.ts`
 
 ### Web3 Integration Architecture
 
@@ -123,6 +124,7 @@ const tx = await contract.methodName(params, { value: ethAmount });
 - `wagmi` + `viem` - Web3 React hooks
 - `ethers` - Smart contract interactions
 - `react-native-modal` - Transaction modals
+- `expo-kiosk-control` - Android kiosk mode functionality
 
 ## Development Notes
 
@@ -168,3 +170,127 @@ const tx = await contract.methodName(params, { value: ethAmount });
 - Status-based conditional rendering
 - Overdue warnings with countdown timers
 - Disabled states for invalid operations
+
+## Kiosk Mode Security System
+
+The app implements a comprehensive kiosk mode system that locks the device when loans become overdue or defaulted, ensuring payment compliance and device security.
+
+### Kiosk Mode Architecture
+
+**Core Components**:
+- `contexts/KioskContext.tsx` - Global state management for kiosk mode
+- `hooks/useKioskMode.ts` - Android kiosk control hook using expo-kiosk-control
+- `components/KioskModeScreen.tsx` - Full-screen locked interface
+
+**Activation Triggers**:
+- **Status 1 (OVERDUE)** - Loan payment is past due date
+- **Status 3 (DEFAULTED)** - Loan has been marked as defaulted
+
+**Deactivation Conditions**:
+- **Status 0 (ACTIVE)** - Loan is current and in good standing
+- **Status 2 (PAID)** - Loan has been successfully repaid
+
+### Kiosk Mode Implementation
+
+**Android Configuration** (`app.json`):
+```json
+{
+  "android": {
+    "permissions": [
+      "android.permission.SYSTEM_ALERT_WINDOW",
+      "android.permission.BIND_DEVICE_ADMIN"
+    ]
+  }
+}
+```
+
+**Monitoring System**:
+- Continuous loan status monitoring every 30 seconds
+- Automatic kiosk mode activation when loan becomes overdue/defaulted
+- Real-time blockchain state synchronization
+
+**Security Features**:
+- Hardware button blocking (back, recent, home buttons)
+- Automatic re-activation if user attempts to exit kiosk mode
+- App state listeners to maintain lock state
+- Platform-specific implementation (Android only, iOS shows appropriate messaging)
+
+### Kiosk Mode User Experience
+
+**Visual Design**:
+- **OVERDUE Mode**: Orange theme (#ff9800) with clock icon ⏰
+- **DEFAULTED Mode**: Dark red theme (#d32f2f) with blocked icon 🚫
+- **Locked Screen**: Full-screen overlay with payment instructions
+
+**Payment Flow from Kiosk Mode**:
+1. User attempts payment from locked screen
+2. Multiple payment strategies attempted:
+   - Direct payment to contract
+   - Status update to overdue → payment (for defaulted loans)
+3. Comprehensive error handling with user-friendly messages
+4. Automatic unlock after successful payment confirmation
+
+**Auto-Unlock System**:
+- Multi-layer unlock mechanism after successful payment
+- Immediate status checking (every 1 second for 15 seconds)
+- Force disable kiosk mode after 3 seconds regardless of blockchain confirmation
+- Context-level auto-disable when loan status changes to PAID (2)
+- Fallback mechanisms ensure device unlocks even if one system fails
+
+### Kiosk Mode State Management
+
+**Context Pattern** (`KioskContext`):
+```typescript
+interface KioskContextType {
+  isKioskModeActive: boolean;
+  defaultedLoan: LoanData | null;
+  checkLoanStatus: () => Promise<void>;
+  handlePaymentAttempt: () => void;
+}
+```
+
+**Hook Pattern** (`useKioskMode`):
+```typescript
+const useKioskMode = () => {
+  const { isKioskEnabled, enableKioskMode, disableKioskMode, isLoading } = useKioskMode();
+  // Returns kiosk control functions and state
+}
+```
+
+### Integration with Main App
+
+**Root Layout Integration** (`app/_layout.tsx`):
+- KioskProvider wraps the entire app
+- Conditional rendering: KioskModeScreen vs normal app interface
+- Automatic detection and switching between modes
+
+**Loan System Integration**:
+- LoanItem components show appropriate status indicators
+- Payment functions handle both normal and kiosk mode scenarios
+- Comprehensive error handling for payment failures
+
+### Development & Testing
+
+**Production Configuration**:
+- All admin/testing tools removed from production build
+- Clean user interface without debug controls
+- Professional loan management experience
+
+**Error Handling**:
+- Network timeout protection (15-second timeout on blockchain calls)
+- Insufficient funds detection and user messaging
+- Contract interaction failure recovery
+- Transaction rejection handling
+
+### Security Considerations
+
+**Payment Security**:
+- All contract interactions verify Monad Testnet (Chain ID: 10143)
+- Proper gas estimation and fee handling
+- Transaction confirmation before kiosk mode disable
+
+**Kiosk Mode Security**:
+- Automatic re-activation if unpinned
+- Hardware button interception
+- Emergency contact functionality
+- Platform-specific permissions and controls
