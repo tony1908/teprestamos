@@ -1,6 +1,6 @@
 import React from 'react';
-import { TodoList } from '@/components/todo/TodoList';
+import { LoanList } from '@/components/loan/LoanList';
 
-export default function TodosScreen() {
-  return <TodoList />;
+export default function LoansScreen() {
+  return <LoanList />;
 }

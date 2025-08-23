@@ -23,8 +23,8 @@ export default function HomeScreen() {
           />
         }>
         <ThemedView style={styles.titleContainer}>
-          <ThemedText type="title">Monad Todo</ThemedText>
-          <ThemedText type="subtitle">Stake-to-Commit Todo App</ThemedText>
+          <ThemedText type="title">Te Prestamos</ThemedText>
+          <ThemedText type="subtitle">Decentralized Lending Platform</ThemedText>
           <HelloWave />
         </ThemedView>
         
@@ -39,32 +39,32 @@ export default function HomeScreen() {
         
         <ThemedView style={styles.descriptionContainer}>
           <ThemedText style={styles.descriptionText}>
-            Ready to create your stake-to-commit todos? Head over to the Todos tab to get started!
+            Need a quick loan? Head over to the Loans tab to request one!
           </ThemedText>
         </ThemedView>
 
         <ThemedView style={styles.featuresContainer}>
           <View style={styles.featureCard}>
-            <ThemedText style={styles.featureIcon}>🎯</ThemedText>
-            <ThemedText style={styles.featureTitle}>Stake & Commit</ThemedText>
+            <ThemedText style={styles.featureIcon}>💰</ThemedText>
+            <ThemedText style={styles.featureTitle}>Request Loans</ThemedText>
             <ThemedText style={styles.featureDescription}>
-              Put MON tokens on the line to stay committed to your goals
+              Request MON token loans with flexible repayment terms
             </ThemedText>
           </View>
           
           <View style={styles.featureCard}>
-            <ThemedText style={styles.featureIcon}>✅</ThemedText>
-            <ThemedText style={styles.featureTitle}>Complete & Earn</ThemedText>
+            <ThemedText style={styles.featureIcon}>⏰</ThemedText>
+            <ThemedText style={styles.featureTitle}>Fast Approval</ThemedText>
             <ThemedText style={styles.featureDescription}>
-              Complete todos to retrieve your staked tokens
+              Get your loan approved quickly by the platform
             </ThemedText>
           </View>
           
           <View style={styles.featureCard}>
-            <ThemedText style={styles.featureIcon}>📊</ThemedText>
-            <ThemedText style={styles.featureTitle}>Track Progress</ThemedText>
+            <ThemedText style={styles.featureIcon}>🔒</ThemedText>
+            <ThemedText style={styles.featureTitle}>Secure & Trustless</ThemedText>
             <ThemedText style={styles.featureDescription}>
-              Monitor your commitment success rate and total stakes
+              Smart contract-based lending with transparent terms
             </ThemedText>
           </View>
         </ThemedView>

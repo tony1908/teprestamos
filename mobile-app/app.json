@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "my-app-monad",
-    "slug": "my-app-monad",
+    "name": "Te Prestamos",
+    "slug": "te-prestamos",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

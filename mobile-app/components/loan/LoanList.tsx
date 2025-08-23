@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -7,54 +7,52 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import {BrowserProvider, Contract} from 'ethers';
+import {BrowserProvider, Contract, ethers} from 'ethers';
 import {useAccount, useWalletClient} from 'wagmi';
-import {ethers} from 'ethers';
-import {TodoItem, TodoItemData} from './TodoItem';
-import {CreateTodo} from './CreateTodo';
+import {LoanItem, LoanItemData} from './LoanItem';
+import {CreateLoan} from './CreateLoan';
 import {
-  stakingTodoListABI,
-  STAKING_TODO_CONTRACT_ADDRESS,
-} from '../../utils/stakingTodoListABI';
+  loanContractABI,
+  LOAN_CONTRACT_ADDRESS,
+} from '../../utils/loanContractABI';
 
-export function TodoList() {
-  const [todos, setTodos] = useState<TodoItemData[]>([]);
+export function LoanList() {
+  const [loan, setLoan] = useState<LoanItemData | null>(null);
   const [loading, setLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [contractStats, setContractStats] = useState({
-    totalTodos: 0,
     contractBalance: '0',
   });
   const {address, isConnected} = useAccount();
   const {data: walletClient} = useWalletClient();
 
   useEffect(() => {
-    console.log('TodoList useEffect:', {isConnected, hasProvider: !!walletClient, address});
+    console.log('LoanList useEffect:', {isConnected, hasProvider: !!walletClient, address});
     setError(null);
     
     if (isConnected && walletClient && address) {
-      loadTodos();
+      loadLoan();
       loadContractStats();
     } else {
-      setTodos([]);
-      setContractStats({totalTodos: 0, contractBalance: '0'});
+      setLoan(null);
+      setContractStats({contractBalance: '0'});
       setLoading(false);
     }
-  }, [isConnected, walletClient, address]);
+  }, [isConnected, walletClient, address, loadLoan, loadContractStats]);
 
-  const loadTodos = async () => {
+  const loadLoan = useCallback(async () => {
     if (!walletClient || !address) {
-      console.log('loadTodos: Missing provider or address');
+      console.log('loadLoan: Missing provider or address');
       return;
     }
 
-    console.log('loadTodos: Starting to load todos for', address);
+    console.log('loadLoan: Starting to load loan for', address);
     setLoading(true);
     setError(null);
     
     const timeoutId = setTimeout(() => {
-      console.log('loadTodos: Timeout reached, stopping loading');
+      console.log('loadLoan: Timeout reached, stopping loading');
       setLoading(false);
       setError('Request timed out. Please check your connection and try again.');
     }, 15000);
@@ -73,42 +71,43 @@ export function TodoList() {
       }
       
       const contract = new Contract(
-        STAKING_TODO_CONTRACT_ADDRESS,
-        stakingTodoListABI,
+        LOAN_CONTRACT_ADDRESS,
+        loanContractABI,
         signer,
       );
 
-      const code = await ethersProvider.getCode(STAKING_TODO_CONTRACT_ADDRESS);
+      const code = await ethersProvider.getCode(LOAN_CONTRACT_ADDRESS);
       if (code === '0x') {
-        throw new Error(`Contract not found at address ${STAKING_TODO_CONTRACT_ADDRESS}. Please verify the contract address.`);
+        throw new Error(`Contract not found at address ${LOAN_CONTRACT_ADDRESS}. Please verify the contract address.`);
       }
       
-      console.log('Contract verified, calling getUserTodoDetails...');
+      console.log('Contract verified, calling getActiveLoan...');
       
-      const userTodos = await contract.getUserTodoDetails(address);
+      const userLoan = await contract.getActiveLoan(address);
       
       clearTimeout(timeoutId);
-      console.log('Got user todos:', userTodos.length);
+      console.log('Got user loan:', userLoan);
       
-      const formattedTodos: TodoItemData[] = userTodos.map((todo: any) => ({
-        id: Number(todo.id),
-        description: todo.description,
-        completed: todo.completed,
-        stakedAmount: todo.stakedAmount.toString(),
-        owner: todo.owner,
-        createdAt: Number(todo.createdAt),
-      }));
+      if (userLoan.amount > 0) {
+        const formattedLoan: LoanItemData = {
+          amount: userLoan.amount.toString(),
+          maxPaymentDate: Number(userLoan.maxPaymentDate),
+          status: Number(userLoan.status),
+          createdAt: Number(userLoan.createdAt),
+          isOverdue: userLoan.isOverdue,
+        };
 
-      formattedTodos.sort((a, b) => b.createdAt - a.createdAt);
-      
-      console.log('Formatted todos:', formattedTodos);
-      setTodos(formattedTodos);
+        console.log('Formatted loan:', formattedLoan);
+        setLoan(formattedLoan);
+      } else {
+        setLoan(null);
+      }
       setError(null);
     } catch (error: any) {
       clearTimeout(timeoutId);
-      console.error('Error loading todos:', error);
+      console.error('Error loading loan:', error);
       
-      let errorMessage = 'Failed to load todos';
+      let errorMessage = 'Failed to load loan';
       if (error.message.includes('timeout') || error.message.includes('network')) {
         errorMessage = 'Network timeout. Please check your connection to Monad testnet and try again.';
       } else if (error.message.includes('insufficient funds')) {
@@ -119,23 +118,23 @@ export function TodoList() {
         errorMessage = error.message;
       } else if (error.message.includes('missing revert data') || error.message.includes('CALL_EXCEPTION')) {
         console.log('Contract call failed, showing empty state');
-        setTodos([]);
+        setLoan(null);
         setError(null);
         setLoading(false);
         return;
       } else {
-        errorMessage = `Failed to load todos: ${error.message || 'Unknown error'}`;
+        errorMessage = `Failed to load loan: ${error.message || 'Unknown error'}`;
       }
       
       setError(errorMessage);
-      setTodos([]);
+      setLoan(null);
     } finally {
       clearTimeout(timeoutId);
       setLoading(false);
     }
-  };
+  }, [walletClient, address]);
 
-  const loadContractStats = async () => {
+  const loadContractStats = useCallback(async () => {
     if (!walletClient || !address) {
       console.log('loadContractStats: Missing provider or address');
       return;
@@ -146,141 +145,121 @@ export function TodoList() {
       const ethersProvider = new BrowserProvider(walletClient!);
       const signer = await ethersProvider.getSigner();
       const contract = new Contract(
-        STAKING_TODO_CONTRACT_ADDRESS,
-        stakingTodoListABI,
+        LOAN_CONTRACT_ADDRESS,
+        loanContractABI,
         signer,
       );
 
-      const [totalCount, balance] = await Promise.all([
-        contract.getTotalTodoCount(),
-        contract.getContractBalance(),
-      ]);
+      const balance = await contract.getContractBalance();
 
-      console.log('Contract stats:', {totalCount: Number(totalCount), balance: ethers.formatEther(balance)});
+      console.log('Contract stats:', {balance: ethers.formatEther(balance)});
       
       setContractStats({
-        totalTodos: Number(totalCount),
         contractBalance: ethers.formatEther(balance),
       });
     } catch (error) {
       console.error('Error loading contract stats:', error);
       console.log('Using default stats due to error');
     }
-  };
+  }, [walletClient, address]);
 
-  const handleTodoCreated = () => {
-    loadTodos();
+  const handleLoanCreated = () => {
+    loadLoan();
     loadContractStats();
     setShowCreateForm(false);
   };
 
-  const handleTodoCompleted = () => {
-    loadTodos();
+  const handleLoanUpdated = () => {
+    loadLoan();
     loadContractStats();
   };
 
   const renderStats = () => (
     <View style={styles.statsContainer}>
       <View style={styles.statBox}>
-        <Text style={styles.statNumber}>{todos.length}</Text>
-        <Text style={styles.statLabel}>Your Todos</Text>
-      </View>
-      <View style={styles.statBox}>
-        <Text style={styles.statNumber}>{contractStats.totalTodos}</Text>
-        <Text style={styles.statLabel}>Total Todos</Text>
+        <Text style={styles.statNumber}>{loan ? '1' : '0'}</Text>
+        <Text style={styles.statLabel}>Your Active Loans</Text>
       </View>
       <View style={styles.statBox}>
         <Text style={styles.statNumber}>
           {parseFloat(contractStats.contractBalance).toFixed(4)}
         </Text>
-        <Text style={styles.statLabel}>Total Staked (MON)</Text>
+        <Text style={styles.statLabel}>Available Funds (MON)</Text>
       </View>
     </View>
   );
 
-  const completedTodos = todos.filter(todo => todo.completed);
-  const pendingTodos = todos.filter(todo => !todo.completed);
-
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Staking Todo List</Text>
+      <Text style={styles.title}>Monad Loans</Text>
       
       {renderStats()}
       
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={styles.createButton}
-          onPress={() => setShowCreateForm(!showCreateForm)}>
+          style={[styles.createButton, loan && styles.disabledButton]}
+          onPress={() => setShowCreateForm(!showCreateForm)}
+          disabled={!!loan}>
           <Text style={styles.createButtonText}>
-            {showCreateForm ? '✕ Cancel' : '+ Create Todo'}
+            {showCreateForm ? '✕ Cancel' : '+ Request Loan'}
           </Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.refreshButton} onPress={loadTodos}>
+        <TouchableOpacity style={styles.refreshButton} onPress={loadLoan}>
           <Text style={styles.refreshButtonText}>⟳ Refresh</Text>
         </TouchableOpacity>
       </View>
 
+      {loan && (
+        <View style={styles.warningContainer}>
+          <Text style={styles.warningText}>
+            You can only have one active loan at a time. Pay back your current loan to request a new one.
+          </Text>
+        </View>
+      )}
+
       {error && (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadTodos}>
+          <TouchableOpacity style={styles.retryButton} onPress={loadLoan}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {showCreateForm && (
-        <CreateTodo onTodoCreated={handleTodoCreated} />
+      {showCreateForm && !loan && (
+        <CreateLoan onLoanCreated={handleLoanCreated} />
       )}
 
       {loading && !showCreateForm && (
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading todos...</Text>
+          <Text style={styles.loadingText}>Loading loan...</Text>
         </View>
       )}
 
       <ScrollView
         style={styles.scrollView}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={loadTodos} />
+          <RefreshControl refreshing={loading} onRefresh={loadLoan} />
         }>
         
-        {pendingTodos.length > 0 && (
+        {loan && (
           <>
             <Text style={styles.sectionTitle}>
-              Pending Todos ({pendingTodos.length})
+              Your Active Loan
             </Text>
-            {pendingTodos.map(todo => (
-              <TodoItem
-                key={todo.id}
-                todo={todo}
-                onComplete={handleTodoCompleted}
-              />
-            ))}
+            <LoanItem
+              loan={loan}
+              onUpdate={handleLoanUpdated}
+            />
           </>
         )}
         
-        {completedTodos.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>
-              Completed Todos ({completedTodos.length})
-            </Text>
-            {completedTodos.map(todo => (
-              <TodoItem
-                key={todo.id}
-                todo={todo}
-                onComplete={handleTodoCompleted}
-              />
-            ))}
-          </>
-        )}
-        
-        {todos.length === 0 && !loading && (
+        {!loan && !loading && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No todos yet!</Text>
+            <Text style={styles.emptyText}>No active loans!</Text>
             <Text style={styles.emptySubtext}>
-              Create your first todo by staking some MON tokens
+              Request a loan to get started
             </Text>
           </View>
         )}
@@ -347,6 +326,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     flex: 1,
   },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
   createButtonText: {
     color: 'white',
     fontSize: 16,
@@ -389,6 +371,19 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: 14,
     color: '#bbb',
+    textAlign: 'center',
+  },
+  warningContainer: {
+    backgroundColor: '#fff3cd',
+    margin: 16,
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ffc107',
+  },
+  warningText: {
+    color: '#856404',
+    fontSize: 14,
     textAlign: 'center',
   },
   errorContainer: {

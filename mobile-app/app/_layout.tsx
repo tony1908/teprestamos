@@ -27,13 +27,13 @@ const projectId = ""; // This project ID will only work for Expo Go. Use your ow
 
 // 2. Create config
 const metadata = {
-  name: "Monad Todo",
-  description: "Stake-to-Commit Todo App on Monad",
+  name: "Te Prestamos",
+  description: "Decentralized Lending Platform on Monad",
   url: "https://monad.xyz",
   icons: ["https://files.svgcdn.io/token-branded/monad.png"],
   redirect: {
     native: "appkitexpowagmi://",
-    universal: "https://monadtodo.app",
+    universal: "https://teprestamos.app",
   },
 };
 
