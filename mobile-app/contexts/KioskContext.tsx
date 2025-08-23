@@ -62,13 +62,18 @@ export function KioskProvider({ children }: { children: React.ReactNode }) {
 
         console.log('Loan data:', loanData);
         
-        // Check if loan is defaulted (status 3)
-        if (loanData.status === 3) {
+        // Check if loan is overdue (status 1) or defaulted (status 3)
+        if (loanData.status === 1) {
+          console.log('🔒 LOAN OVERDUE - ACTIVATING KIOSK MODE');
+          setDefaultedLoan(loanData);
+          setIsKioskModeActive(true);
+        } else if (loanData.status === 3) {
           console.log('🔒 LOAN DEFAULTED - ACTIVATING KIOSK MODE');
           setDefaultedLoan(loanData);
           setIsKioskModeActive(true);
         } else {
-          // If loan exists but not defaulted, disable kiosk mode
+          // If loan exists but not overdue or defaulted, disable kiosk mode
+          console.log(`Loan status is ${loanData.status} - disabling kiosk mode`);
           setIsKioskModeActive(false);
           setDefaultedLoan(null);
         }
@@ -84,10 +89,19 @@ export function KioskProvider({ children }: { children: React.ReactNode }) {
 
   const handlePaymentAttempt = () => {
     console.log('Payment attempt initiated from kiosk mode');
-    // This will trigger a re-check of loan status
-    setTimeout(() => {
+    // This will trigger a re-check of loan status with more frequent checks
+    let checkCount = 0;
+    const maxChecks = 10;
+    
+    const intervalId = setInterval(() => {
+      checkCount++;
+      console.log(`Payment check ${checkCount}/${maxChecks}`);
       checkLoanStatus();
-    }, 2000); // Give some time for transaction to be processed
+      
+      if (checkCount >= maxChecks || !isKioskModeActive) {
+        clearInterval(intervalId);
+      }
+    }, 2000); // Check every 2 seconds for up to 20 seconds
   };
 
   // Check loan status periodically when connected

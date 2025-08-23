@@ -123,8 +123,9 @@ export function AdminControls() {
       </View>
 
       <ThemedText style={styles.instructions}>
-        Use "Set Defaulted" to test kiosk mode activation.{'\n'}
-        Use "Set Overdue" to reset and allow payments.
+        🔒 "Set Overdue" or "Set Defaulted" will activate kiosk mode.{'\n'}
+        💰 "Set Active" to reset and disable kiosk mode.{'\n'}
+        ✅ "Set Paid" to mark loan as completed.
       </ThemedText>
 
       <RequestModal

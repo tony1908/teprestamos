@@ -73,6 +73,8 @@ function AppContent() {
 function MainApp() {
   const { isKioskModeActive, defaultedLoan, handlePaymentAttempt } = useKioskContext();
   
+  console.log('MainApp - isKioskModeActive:', isKioskModeActive, 'defaultedLoan status:', defaultedLoan?.status);
+  
   if (isKioskModeActive && defaultedLoan) {
     return (
       <KioskModeScreen

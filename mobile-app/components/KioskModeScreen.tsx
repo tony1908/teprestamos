@@ -18,8 +18,12 @@ interface KioskModeScreenProps {
 export default function KioskModeScreen({ loanAmount, onPaymentRequired }: KioskModeScreenProps) {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
-  const { isKioskEnabled, enableKioskMode, isLoading: kioskLoading } = useKioskMode();
+  const { isKioskEnabled, enableKioskMode, disableKioskMode, isLoading: kioskLoading } = useKioskMode();
   const { defaultedLoan, checkLoanStatus } = useKioskContext();
+  
+  // Determine loan status for messaging
+  const isDefaulted = defaultedLoan?.status === 3;
+  const isOverdue = defaultedLoan?.status === 1;
   
   const [requestModalVisible, setRequestModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +60,10 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
       
       // First attempt: Try direct payment (in case contract allows it)
       try {
-        setData('Attempting direct loan payment...');
+        setData(isOverdue 
+          ? 'Processing overdue loan payment...' 
+          : 'Attempting direct loan payment...'
+        );
         const payTx = await contract.payBackLoan({
           value: defaultedLoan.amount,
         });
@@ -64,7 +71,7 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
         setData(
           `✅ Loan payment successful!\n\nTransaction Hash: ${payTx.hash}\nAmount Paid: ${ethers.formatEther(
             defaultedLoan.amount,
-          )} MON\n\n🔓 Device will be unlocked shortly...`,
+          )} MON\n\n🔓 Device unlocking...`,
         );
         paymentSuccessful = true;
         
@@ -87,7 +94,7 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
           setData(
             `✅ Loan payment successful!\n\nTransaction Hash: ${payTx.hash}\nAmount Paid: ${ethers.formatEther(
               defaultedLoan.amount,
-            )} MON\n\n🔓 Device will be unlocked shortly...`,
+            )} MON\n\n🔓 Device unlocking...`,
           );
           paymentSuccessful = true;
           
@@ -98,10 +105,26 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
       }
       
       if (paymentSuccessful) {
-        // Check loan status after payment
-        setTimeout(() => {
-          checkLoanStatus();
-        }, 3000);
+        // Immediately start checking loan status and disable kiosk mode
+        let checkCount = 0;
+        const maxChecks = 15;
+        
+        const checkInterval = setInterval(async () => {
+          checkCount++;
+          console.log(`Post-payment check ${checkCount}/${maxChecks}`);
+          
+          await checkLoanStatus();
+          
+          // Force disable kiosk mode after a few checks
+          if (checkCount >= 3) {
+            console.log('Payment successful - forcibly disabling kiosk mode');
+            await disableKioskMode();
+          }
+          
+          if (checkCount >= maxChecks) {
+            clearInterval(checkInterval);
+          }
+        }, 1000); // Check every second
       }
       
     } catch (e: any) {
@@ -146,19 +169,33 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[
+      styles.container, 
+      isDefaulted ? styles.defaultedContainer : isOverdue ? styles.overdueContainer : {}
+    ]}>
       <View style={styles.lockContainer}>
         <Text style={styles.lockIcon}>🔒</Text>
         <ThemedText type="title" style={styles.title}>Device Locked</ThemedText>
-        <ThemedText type="subtitle" style={styles.subtitle}>Loan Default Mode</ThemedText>
+        <ThemedText type="subtitle" style={styles.subtitle}>
+          {isDefaulted ? 'Loan Default Mode' : isOverdue ? 'Loan Overdue Mode' : 'Loan Payment Required'}
+        </ThemedText>
       </View>
 
       <View style={styles.contentContainer}>
         <View style={styles.warningContainer}>
-          <Text style={styles.warningIcon}>⚠️</Text>
-          <ThemedText style={styles.warningTitle}>Loan Payment Required</ThemedText>
+          <Text style={styles.warningIcon}>
+            {isDefaulted ? '🚫' : isOverdue ? '⏰' : '⚠️'}
+          </Text>
+          <ThemedText style={styles.warningTitle}>
+            {isDefaulted ? 'Loan Defaulted' : isOverdue ? 'Loan Overdue' : 'Loan Payment Required'}
+          </ThemedText>
           <ThemedText style={styles.warningText}>
-            This device has been locked due to an unpaid loan default.
+            {isDefaulted 
+              ? 'This device has been locked due to a defaulted loan that requires immediate payment.'
+              : isOverdue 
+              ? 'This device has been locked because your loan payment is overdue.'
+              : 'This device has been locked due to an unpaid loan.'
+            }
           </ThemedText>
         </View>
 
@@ -191,7 +228,14 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
           disabled={isLoading || kioskLoading}
         >
           <ThemedText style={styles.paymentButtonText}>
-            {isLoading ? 'Processing Payment...' : 'Pay Back Loan & Unlock'}
+            {isLoading 
+              ? 'Processing Payment...' 
+              : isDefaulted 
+              ? 'Pay Defaulted Loan & Unlock'
+              : isOverdue
+              ? 'Pay Overdue Loan & Unlock'
+              : 'Pay Back Loan & Unlock'
+            }
           </ThemedText>
         </TouchableOpacity>
 
@@ -228,8 +272,14 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f44336',
+    backgroundColor: '#f44336', // Default red for general lock
     padding: 20,
+  },
+  overdueContainer: {
+    backgroundColor: '#ff9800', // Orange for overdue
+  },
+  defaultedContainer: {
+    backgroundColor: '#d32f2f', // Dark red for defaulted
   },
   lockContainer: {
     alignItems: 'center',
