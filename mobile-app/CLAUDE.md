@@ -35,10 +35,13 @@ npx tsc --noEmit   # TypeScript type checking
 ### App Structure
 - **File-based routing** with Expo Router in `/app` directory
 - **Two-tab layout**: Loans, Profile
+- **Onboarding flow**: Complete wallet + Palenca setup before accessing main app
 - **Component hierarchy**: 
-  - Root layout (`app/_layout.tsx`) configures Wagmi, AppKit, KioskProvider, and theme providers
+  - Root layout (`app/_layout.tsx`) configures Wagmi, AppKit, OnboardingProvider, KioskProvider, and theme providers
+  - Onboarding gate controls access to main app based on completion status
   - Tab layout (`app/(tabs)/_layout.tsx`) defines tab navigation
   - Loan functionality in `components/loan/`
+  - Onboarding system in `components/onboarding/`, `contexts/OnboardingContext.tsx`
   - Kiosk mode system in `components/KioskModeScreen.tsx`, `contexts/KioskContext.tsx`, `hooks/useKioskMode.ts`
 
 ### Web3 Integration Architecture
@@ -124,6 +127,8 @@ const tx = await contract.methodName(params, { value: ethAmount });
 - `wagmi` + `viem` - Web3 React hooks
 - `ethers` - Smart contract interactions
 - `react-native-modal` - Transaction modals
+- `react-native-webview` - Palenca integration
+- `@react-native-async-storage/async-storage` - Onboarding state persistence
 - `expo-kiosk-control` - Android kiosk mode functionality
 
 ## Development Notes
@@ -218,9 +223,12 @@ The app implements a comprehensive kiosk mode system that locks the device when 
 ### Kiosk Mode User Experience
 
 **Visual Design**:
-- **OVERDUE Mode**: Orange theme (#ff9800) with clock icon ⏰
-- **DEFAULTED Mode**: Dark red theme (#d32f2f) with blocked icon 🚫
-- **Locked Screen**: Full-screen overlay with payment instructions
+- **Modern Minimalist Design**: Clean white background with professional card layouts
+- **Status Icons**: Large circular containers with semantic color coding (error/warning)
+- **OVERDUE Mode**: Warning orange status icon (#F59E0B) with clock icon ⏰
+- **DEFAULTED Mode**: Error red status icon (#EF4444) with blocked icon 🚫
+- **Responsive Amount Display**: Dynamic font sizing based on loan amount length
+- **Professional Cards**: Clean information hierarchy with proper spacing and shadows
 
 **Payment Flow from Kiosk Mode**:
 1. User attempts payment from locked screen
@@ -294,3 +302,218 @@ const useKioskMode = () => {
 - Hardware button interception
 - Emergency contact functionality
 - Platform-specific permissions and controls
+
+## Onboarding Flow System
+
+The app implements a comprehensive two-step onboarding flow that ensures users complete wallet connection and Palenca bank account linking before accessing the lending platform.
+
+### Onboarding Architecture
+
+**Core Components**:
+- `contexts/OnboardingContext.tsx` - Global state management for onboarding completion status
+- `components/onboarding/OnboardingFlow.tsx` - Main flow component managing two-step process
+- `components/onboarding/PalencaConnect.tsx` - Palenca WebView integration component
+
+**Flow Steps**:
+1. **Step 1: Wallet Connection** - User connects crypto wallet via AppKit
+2. **Step 2: Palenca Integration** - User links bank account via Palenca WebView widget
+
+### Onboarding Implementation
+
+**State Management** (`OnboardingContext`):
+```typescript
+interface OnboardingContextType {
+  hasCompletedOnboarding: boolean;
+  isLoading: boolean;
+  completeOnboarding: () => Promise<void>;
+  resetOnboarding: () => Promise<void>;
+}
+```
+
+**Persistence**: Uses AsyncStorage to remember completion status:
+- `onboarding_completed` - Overall onboarding completion flag
+- `palenca_connected` - Palenca connection status flag
+
+**Root Layout Integration** (`app/_layout.tsx`):
+- OnboardingProvider wraps entire app at root level
+- OnboardingGate component controls access based on completion status
+- Conditional rendering: Onboarding flow → Main app (with KioskProvider)
+
+### Palenca Integration
+
+**Configuration**:
+- **Widget ID**: `89e7edf3-02fb-4b79-95fa-d9f52a63d837`
+- **Base URL**: `https://connect.palenca.com`
+- **Primary Color**: `#ea4c89` (pink theme matching Te Prestamos branding)
+
+**Event Handling** (based on Palenca v2 docs):
+```typescript
+const handleEvent = (event: any) => {
+  const eventData = JSON.parse(event.nativeEvent.data);
+  
+  switch (eventData.signal) {
+    case 'ready':           // Widget initialized
+    case 'user_created':    // User creation successful → onSuccess()
+    case 'connection_success': // Bank connection successful → onSuccess()
+    case 'connection_error':   // Connection failed → onError()
+  }
+};
+```
+
+**WebView Implementation**:
+- Full-screen embedded widget with loading states
+- Proper event parsing according to Palenca envelope structure
+- Error handling with retry/skip options
+- Console logging for debugging connection flow
+
+### Onboarding User Experience
+
+**Visual Design**:
+- **Step 1**: Updated LoginScreen with "Step 1: Connect your wallet to continue"
+- **Step 2**: Full-screen Palenca WebView with header explaining bank account linking
+- **Completion**: Success screen with celebration before redirecting to main app
+
+**Flow Logic**:
+- Automatic progression from Step 1 to Step 2 when wallet connects
+- State persistence prevents re-showing completed onboarding
+- Comprehensive error handling with user-friendly messages
+- 2-second delay on completion screen for better UX
+
+### Development & Testing
+
+**Reset Functionality**:
+- Reset onboarding button in Profile tab under "Development Options"
+- Clears both `onboarding_completed` and `palenca_connected` AsyncStorage keys
+- Requires app restart to see onboarding flow again
+
+**Error Handling**:
+- Network timeout protection for Palenca widget loading
+- Fallback Alert for unparseable Palenca events
+- AsyncStorage error recovery with graceful degradation
+- Comprehensive console logging for debugging
+
+**Integration Notes**:
+- Onboarding gate runs before KioskProvider initialization
+- Maintains all existing kiosk mode functionality after onboarding
+- LoginScreen updated with Te Prestamos branding and step indicators
+- Profile screen includes development tools for testing onboarding flow
+
+### Security Considerations
+
+**Data Privacy**:
+- No sensitive Palenca data stored locally beyond connection status flag
+- WebView events properly validated and parsed
+- AsyncStorage used only for completion tracking, not user data
+
+**Flow Security**:
+- Onboarding completion required before accessing lending features
+- Proper wallet connection validation before Palenca step
+- Error boundaries prevent broken states during onboarding process
+
+## UI/UX Design System
+
+The app features a modern, minimalist fintech design system optimized for professional lending applications.
+
+### Design Philosophy
+
+**Minimalist & Professional**: Clean interfaces with ample white space, subtle shadows, and professional typography that builds trust with users.
+
+**Fintech-Oriented**: Color scheme and visual hierarchy designed specifically for financial applications, emphasizing security and reliability.
+
+**Mobile-First**: Responsive design patterns that work seamlessly across different screen sizes and Android device variations.
+
+### Color Palette
+
+**Primary Colors**:
+- Primary Blue: `#2563EB` (main brand color)
+- Primary Blue Light: `#3B82F6` 
+- Primary Blue Dark: `#1D4ED8`
+
+**Semantic Colors**:
+- Success Green: `#10B981`
+- Warning Orange: `#F59E0B`
+- Error Red: `#EF4444`
+
+**Neutral Colors**:
+- Text Primary: `#111827`
+- Text Secondary: `#6B7280`
+- Background: `#FFFFFF`
+- Background Secondary: `#F9FAFB`
+- Border: `#E5E7EB`
+- Card: `#FFFFFF`
+
+### Typography System
+
+**Font Weights**: 400 (regular), 500 (medium), 600 (semibold), 700 (bold)
+
+**Hierarchy**:
+- Large Title: 32px, weight 700
+- Title: 28px, weight 700
+- Subtitle: 24px, weight 600
+- Body Large: 18px, weight 500
+- Body: 16px, weight 400
+- Body Small: 14px, weight 500
+- Caption: 12px, weight 500
+
+### Component Design Patterns
+
+**Cards**: Rounded corners (16px), subtle shadows, consistent padding (20-24px)
+
+**Buttons**: 
+- Primary: Blue background, white text, 16px border radius
+- Secondary: White background, colored border, 12px border radius
+- Minimum height: 48px for accessibility
+
+**Form Elements**: Clean inputs with proper focus states and validation styling
+
+**Status Indicators**: Color-coded badges with appropriate icons and backgrounds
+
+### Screen-Specific Design
+
+**Login/Onboarding**:
+- Centered layouts with progressive disclosure
+- Step indicators and progress bars
+- Feature cards with icons and descriptions
+- Professional branding elements
+
+**Loan Management**:
+- Dashboard-style stats cards
+- Clean loan item cards with status badges
+- Prominent action buttons
+- Clear visual hierarchy for amounts and dates
+
+**Kiosk Mode (Device Lock)**:
+- Minimalist design focused on essential information
+- Large, readable amount displays with responsive font sizing
+- Status icons with semantic colors
+- Clean card layouts with payment actions
+
+**Dynamic Amount Display**: Font size automatically adjusts based on number length:
+- Small numbers (≤4 digits): 48px
+- Medium numbers (5-6 digits): 40px  
+- Large numbers (7-8 digits): 32px
+- Very large numbers (9+ digits): 24px
+
+### Android-Specific Optimizations
+
+**Safe Area Handling**: Proper use of SafeAreaProvider for status bar and navigation areas
+
+**Tab Bar**: Enhanced styling with proper elevation, shadows, and height adjustments to prevent cut-off issues
+
+**Status Bar**: Dark content on light backgrounds for better readability
+
+**Touch Targets**: Minimum 48px height for all interactive elements
+
+### Accessibility Features
+
+**Color Contrast**: All text meets WCAG 2.1 AA standards
+**Touch Targets**: Minimum 48px for all buttons and interactive elements
+**Typography**: Clear hierarchy with appropriate font sizes and weights
+**Status Communication**: Icons combined with text for better comprehension
+
+### Development Guidelines
+
+**Component Consistency**: Use the centralized Colors constant and established patterns
+**Responsive Design**: Font sizes and layouts adapt to content length and screen size  
+**Performance**: Optimized shadows and animations for smooth 60fps experience
+**Maintainability**: Clean separation of styling concerns with StyleSheet objects

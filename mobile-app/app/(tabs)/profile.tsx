@@ -1,17 +1,20 @@
 import { AppKitButton } from '@reown/appkit-wagmi-react-native';
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Alert, ScrollView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccount } from 'wagmi';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function ProfileScreen() {
   const { address } = useAccount();
   const { resetOnboarding } = useOnboarding();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
 
   const handleResetOnboarding = () => {
     Alert.alert(
@@ -32,146 +35,199 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#202020', dark: '#202020' }}
-      headerImage={<View style={{ height: 178, backgroundColor: '#202020' }} />}>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Te Prestamos</ThemedText>
-        <ThemedText type="subtitle">Decentralized Lending Platform</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      
-      <ThemedView style={styles.welcomeContainer}>
-        <ThemedText style={styles.welcomeText}>
-          Welcome back! 🎉
-        </ThemedText>
-        <ThemedText style={styles.addressText}>
-          Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
-        </ThemedText>
-      </ThemedView>
-      
-      <ThemedView style={styles.descriptionContainer}>
-        <ThemedText style={styles.descriptionText}>
-          Your profile and account information
-        </ThemedText>
-      </ThemedView>
-
-      <ThemedView style={styles.featuresContainer}>
-        <View style={styles.featureCard}>
-          <ThemedText style={styles.featureIcon}>💰</ThemedText>
-          <ThemedText style={styles.featureTitle}>Request Loans</ThemedText>
-          <ThemedText style={styles.featureDescription}>
-            Get instant MON token loans with flexible repayment terms
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.header}>
+          <View style={[styles.logoContainer, { backgroundColor: colors.primary }]}>
+            <ThemedText style={styles.logoText}>TP</ThemedText>
+          </View>
+          <ThemedText style={[styles.titleText, { color: colors.text }]}>Te Prestamos</ThemedText>
+          <ThemedText style={[styles.subtitleText, { color: colors.textSecondary }]}>Decentralized Lending Platform</ThemedText>
+        </View>
+        
+        <View style={[styles.welcomeCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
+          <View style={[styles.statusIndicator, { backgroundColor: colors.success }]} />
+          <ThemedText style={[styles.welcomeText, { color: colors.text }]}>
+            Welcome back! 🚀
+          </ThemedText>
+          <ThemedText style={[styles.addressText, { color: colors.textSecondary }]}>
+            {address?.slice(0, 6)}...{address?.slice(-4)}
           </ThemedText>
         </View>
         
-        <View style={styles.featureCard}>
-          <ThemedText style={styles.featureIcon}>⏰</ThemedText>
-          <ThemedText style={styles.featureTitle}>Instant Funding</ThemedText>
-          <ThemedText style={styles.featureDescription}>
-            Loans are automatically approved and funded immediately
-          </ThemedText>
+        <View style={styles.featuresSection}>
+          <View style={[styles.featureCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
+            <View style={[styles.featureIconContainer, { backgroundColor: colors.primary + '15' }]}>
+              <ThemedText style={[styles.featureIcon, { color: colors.primary }]}>💰</ThemedText>
+            </View>
+            <ThemedText style={[styles.featureTitle, { color: colors.text }]}>Request Loans</ThemedText>
+            <ThemedText style={[styles.featureDescription, { color: colors.textSecondary }]}>
+              Get instant MON token loans with flexible repayment terms
+            </ThemedText>
+          </View>
+          
+          <View style={[styles.featureCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
+            <View style={[styles.featureIconContainer, { backgroundColor: colors.success + '15' }]}>
+              <ThemedText style={[styles.featureIcon, { color: colors.success }]}>⚡</ThemedText>
+            </View>
+            <ThemedText style={[styles.featureTitle, { color: colors.text }]}>Instant Funding</ThemedText>
+            <ThemedText style={[styles.featureDescription, { color: colors.textSecondary }]}>
+              Loans are automatically approved and funded immediately
+            </ThemedText>
+          </View>
+          
+          <View style={[styles.featureCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
+            <View style={[styles.featureIconContainer, { backgroundColor: colors.warning + '15' }]}>
+              <ThemedText style={[styles.featureIcon, { color: colors.warning }]}>🔒</ThemedText>
+            </View>
+            <ThemedText style={[styles.featureTitle, { color: colors.text }]}>Secure & Trustless</ThemedText>
+            <ThemedText style={[styles.featureDescription, { color: colors.textSecondary }]}>
+              Smart contract-based lending with transparent terms
+            </ThemedText>
+          </View>
         </View>
-        
-        <View style={styles.featureCard}>
-          <ThemedText style={styles.featureIcon}>🔒</ThemedText>
-          <ThemedText style={styles.featureTitle}>Secure & Trustless</ThemedText>
-          <ThemedText style={styles.featureDescription}>
-            Smart contract-based lending with transparent terms
-          </ThemedText>
+
+        <View style={[styles.section, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
+          <ThemedText style={[styles.sectionTitle, { color: colors.text }]}>Wallet Management</ThemedText>
+          <AppKitButton connectStyle={styles.appKitButton} />
         </View>
-      </ThemedView>
 
-      <View style={styles.walletContainer}>
-        <ThemedText style={styles.walletTitle}>Wallet Management</ThemedText>
-        <AppKitButton connectStyle={styles.appKitButton} />
-      </View>
-
-      <View style={styles.developmentContainer}>
-        <ThemedText style={styles.developmentTitle}>Development Options</ThemedText>
-        <TouchableOpacity style={styles.resetButton} onPress={handleResetOnboarding}>
-          <ThemedText style={styles.resetButtonText}>Reset Onboarding</ThemedText>
-        </TouchableOpacity>
-      </View>
-    </ParallaxScrollView>
+        <View style={[styles.section, { backgroundColor: colors.card, shadowColor: colors.shadow, borderColor: colors.border }]}>
+          <ThemedText style={[styles.sectionTitle, { color: colors.text }]}>Development Options</ThemedText>
+          <TouchableOpacity style={[styles.resetButton, { backgroundColor: colors.error }]} onPress={handleResetOnboarding}>
+            <ThemedText style={styles.resetButtonText}>Reset Onboarding</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+    paddingTop: Platform.OS === 'android' ? 0 : 0,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  header: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+    paddingTop: 40,
+  },
+  logoContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  welcomeContainer: {
-    alignItems: 'center',
+  logoText: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  titleText: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  subtitleText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  welcomeCard: {
+    marginHorizontal: 24,
+    marginBottom: 24,
     padding: 20,
-    backgroundColor: '#f0f8ff',
-    borderRadius: 12,
-    margin: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    position: 'relative',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statusIndicator: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
   welcomeText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
     marginBottom: 8,
     textAlign: 'center',
   },
   addressText: {
     fontSize: 14,
-    color: '#666',
     fontFamily: 'monospace',
+    fontWeight: '500',
   },
-  descriptionContainer: {
-    padding: 20,
-  },
-  descriptionText: {
-    textAlign: 'center',
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#666',
-  },
-  featuresContainer: {
-    padding: 16,
+  featuresSection: {
+    paddingHorizontal: 24,
     gap: 16,
+    marginBottom: 24,
   },
   featureCard: {
-    backgroundColor: 'white',
     padding: 20,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
-    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  featureIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   featureIcon: {
-    fontSize: 32,
-    marginBottom: 8,
+    fontSize: 24,
   },
   featureTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '600',
     marginBottom: 8,
     textAlign: 'center',
   },
   featureDescription: {
     fontSize: 14,
     textAlign: 'center',
-    color: '#666',
     lineHeight: 20,
   },
-  walletContainer: {
+  section: {
+    marginHorizontal: 24,
+    marginBottom: 16,
     padding: 20,
+    borderRadius: 16,
     alignItems: 'center',
-    marginTop: 20,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  walletTitle: {
+  sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 16,
@@ -180,28 +236,13 @@ const styles = StyleSheet.create({
   appKitButton: {
     marginTop: 8,
   },
-  developmentContainer: {
-    padding: 20,
-    alignItems: 'center',
-    marginTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  developmentTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-    textAlign: 'center',
-    color: '#666',
-  },
   resetButton: {
-    backgroundColor: '#ff6b6b',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   resetButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 16,
   },

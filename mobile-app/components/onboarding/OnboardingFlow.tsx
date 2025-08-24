@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccount } from 'wagmi';
 import PalencaConnect from './PalencaConnect';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
@@ -17,6 +20,8 @@ enum OnboardingStep {
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(OnboardingStep.WALLET_CONNECTION);
   const { isConnected } = useAccount();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
 
   React.useEffect(() => {
     if (isConnected && currentStep === OnboardingStep.WALLET_CONNECTION) {
@@ -48,116 +53,203 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   };
 
   const renderWalletConnection = () => (
-    <View style={styles.stepContainer}>
-      <View style={styles.stepHeader}>
-        <Text style={styles.stepNumber}>1</Text>
-        <Text style={styles.stepTitle}>Connect Your Wallet</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.content}>
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { backgroundColor: colors.primary, width: '50%' }]} />
+          </View>
+          <Text style={[styles.progressText, { color: colors.textSecondary }]}>Step 1 of 2</Text>
+        </View>
+        
+        <View style={styles.stepContent}>
+          <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
+            <Text style={styles.iconText}>1</Text>
+          </View>
+          
+          <Text style={[styles.stepTitle, { color: colors.text }]}>Connect Your Wallet</Text>
+          <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
+            Connect your crypto wallet to access secure lending on Monad
+          </Text>
+          
+          <View style={[styles.statusContainer, { 
+            backgroundColor: isConnected ? colors.success + '15' : colors.backgroundSecondary 
+          }]}>
+            <Text style={[styles.statusText, { 
+              color: isConnected ? colors.success : colors.textSecondary 
+            }]}>
+              {isConnected ? '✓ Wallet Connected!' : 'Waiting for wallet connection...'}
+            </Text>
+          </View>
+        </View>
       </View>
-      <Text style={styles.stepDescription}>
-        Connect your crypto wallet to access Te Prestamos lending platform
-      </Text>
-      <Text style={styles.waitingText}>
-        {isConnected ? '✓ Wallet Connected!' : 'Please connect your wallet using the button above...'}
-      </Text>
-    </View>
+    </SafeAreaView>
   );
 
   const renderPalencaConnection = () => (
-    <View style={styles.container}>
-      <View style={styles.stepHeader}>
-        <Text style={styles.stepNumber}>2</Text>
-        <Text style={styles.stepTitle}>Link Your Bank Account</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.content}>
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { backgroundColor: colors.primary, width: '100%' }]} />
+          </View>
+          <Text style={[styles.progressText, { color: colors.textSecondary }]}>Step 2 of 2</Text>
+        </View>
+        
+        <View style={styles.stepHeader}>
+          <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
+            <Text style={styles.iconText}>2</Text>
+          </View>
+          
+          <Text style={[styles.stepTitle, { color: colors.text }]}>Link Bank Account</Text>
+          <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
+            Securely connect your bank account for loan verification
+          </Text>
+        </View>
+        
+        <View style={styles.palencaContainer}>
+          <PalencaConnect
+            onSuccess={handlePalencaSuccess}
+            onError={handlePalencaError}
+            widgetId=""
+          />
+        </View>
       </View>
-      <PalencaConnect
-        onSuccess={handlePalencaSuccess}
-        onError={handlePalencaError}
-        widgetId=""
-      />
-    </View>
+    </SafeAreaView>
   );
 
   const renderComplete = () => (
-    <View style={styles.stepContainer}>
-      <View style={styles.completeContainer}>
-        <Text style={styles.completeEmoji}>🎉</Text>
-        <Text style={styles.completeTitle}>Setup Complete!</Text>
-        <Text style={styles.completeDescription}>
-          Your wallet and bank account are now connected. You can start using Te Prestamos!
-        </Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.content}>
+        <View style={styles.completeContainer}>
+          <View style={[styles.successIcon, { backgroundColor: colors.success }]}>
+            <Text style={styles.successIconText}>✓</Text>
+          </View>
+          
+          <Text style={[styles.completeTitle, { color: colors.text }]}>Setup Complete!</Text>
+          <Text style={[styles.completeDescription, { color: colors.textSecondary }]}>
+            Your wallet and bank account are connected. Ready to start lending!
+          </Text>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 
   return (
-    <View style={styles.container}>
+    <>
       {currentStep === OnboardingStep.WALLET_CONNECTION && renderWalletConnection()}
       {currentStep === OnboardingStep.PALENCA_CONNECTION && renderPalencaConnection()}
       {currentStep === OnboardingStep.COMPLETE && renderComplete()}
-    </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    paddingTop: Platform.OS === 'android' ? 0 : 0,
   },
-  stepContainer: {
+  content: {
     flex: 1,
-    padding: 20,
+    padding: 24,
+  },
+  progressContainer: {
+    marginBottom: 48,
+    marginTop: 16,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  progressText: {
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  stepContent: {
+    flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   stepHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 32,
   },
-  stepNumber: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#ea4c89',
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    lineHeight: 40,
-    marginRight: 15,
+  iconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  iconText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   stepTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    flex: 1,
+    fontWeight: '700',
+    marginBottom: 12,
+    textAlign: 'center',
   },
   stepDescription: {
     fontSize: 16,
-    color: '#666',
-    lineHeight: 24,
-    marginBottom: 30,
-  },
-  waitingText: {
-    fontSize: 16,
-    color: '#28a745',
     textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+    paddingHorizontal: 16,
+  },
+  statusContainer: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 16,
+  },
+  statusText: {
+    fontSize: 16,
     fontWeight: '600',
+    textAlign: 'center',
+  },
+  palencaContainer: {
+    flex: 1,
+    marginTop: 16,
   },
   completeContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 24,
   },
-  completeEmoji: {
-    fontSize: 80,
-    marginBottom: 20,
+  successIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  successIconText: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   completeTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
+    fontWeight: '700',
+    marginBottom: 16,
+    textAlign: 'center',
   },
   completeDescription: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
     lineHeight: 24,
   },

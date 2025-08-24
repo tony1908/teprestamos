@@ -1,5 +1,7 @@
 import React, {useState} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import {BrowserProvider, Contract, ethers} from 'ethers';
 import {useAccount, useWalletClient} from 'wagmi';
 import {RequestModal} from './RequestModal';
@@ -28,6 +30,8 @@ export function LoanItem({loan, onUpdate}: Props) {
   const [error, setError] = useState(false);
   const {address} = useAccount();
   const {data: walletClient} = useWalletClient();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
 
   const payBackLoan = async () => {
     if (!walletClient || (loan.status !== 0 && loan.status !== 1) || !address) {
@@ -98,15 +102,30 @@ export function LoanItem({loan, onUpdate}: Props) {
   const getStatusColor = (status: number) => {
     switch (status) {
       case 0:
-        return '#4CAF50'; // Green for active
+        return colors.success; // Green for active
       case 1:
-        return '#f44336'; // Red for overdue
+        return colors.error; // Red for overdue
       case 2:
-        return '#2196F3'; // Blue for paid
+        return colors.primary; // Blue for paid
       case 3:
-        return '#9e9e9e'; // Gray for defaulted
+        return colors.textSecondary; // Gray for defaulted
       default:
-        return '#999';
+        return colors.textSecondary;
+    }
+  };
+
+  const getStatusBgColor = (status: number) => {
+    switch (status) {
+      case 0:
+        return colors.success + '15'; // Light green for active
+      case 1:
+        return colors.error + '15'; // Light red for overdue
+      case 2:
+        return colors.primary + '15'; // Light blue for paid
+      case 3:
+        return colors.textSecondary + '15'; // Light gray for defaulted
+      default:
+        return colors.backgroundSecondary;
     }
   };
 
@@ -128,28 +147,35 @@ export function LoanItem({loan, onUpdate}: Props) {
   return (
     <View style={[
       styles.container, 
-      loan.isOverdue && styles.overdueContainer,
-      loan.status === 2 && styles.repaidContainer
+      { 
+        backgroundColor: colors.card, 
+        shadowColor: colors.shadow,
+        borderColor: loan.isOverdue ? colors.error : (loan.status === 2 ? colors.primary : 'transparent'),
+        borderWidth: loan.isOverdue || loan.status === 2 ? 1 : 0
+      }
     ]}>
       <View style={styles.header}>
-        <Text style={[styles.status, {color: getStatusColor(loan.status)}]}>
-          {getStatusText(loan.status)}
-        </Text>
-        <Text style={styles.date}>{formatDate(loan.createdAt)}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: getStatusBgColor(loan.status) }]}>
+          <Text style={[styles.status, {color: getStatusColor(loan.status)}]}>
+            {getStatusText(loan.status)}
+          </Text>
+        </View>
+        <Text style={[styles.date, { color: colors.textSecondary }]}>{formatDate(loan.createdAt)}</Text>
       </View>
       
-      <View style={styles.amountContainer}>
-        <Text style={styles.amountLabel}>Loan Amount:</Text>
-        <Text style={styles.amount}>
+      <View style={[styles.amountContainer, { backgroundColor: colors.backgroundSecondary }]}>
+        <Text style={[styles.amountLabel, { color: colors.textSecondary }]}>Loan Amount</Text>
+        <Text style={[styles.amount, { color: colors.primary }]}>
           {ethers.formatEther(loan.amount)} MON
         </Text>
       </View>
 
       <View style={styles.detailsContainer}>
-        <Text style={styles.detailLabel}>Due Date:</Text>
+        <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Due Date</Text>
         <Text style={[
           styles.detailValue,
-          loan.isOverdue && styles.overdueText
+          { color: loan.isOverdue ? colors.error : colors.text },
+          loan.isOverdue && { fontWeight: '600' }
         ]}>
           {formatDateTime(loan.maxPaymentDate)}
         </Text>
@@ -157,10 +183,11 @@ export function LoanItem({loan, onUpdate}: Props) {
 
       {(loan.status === 0 || loan.status === 1) && (
         <View style={styles.detailsContainer}>
-          <Text style={styles.detailLabel}>Time Remaining:</Text>
+          <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Time Remaining</Text>
           <Text style={[
             styles.detailValue,
-            loan.isOverdue && styles.overdueText
+            { color: loan.isOverdue ? colors.error : colors.text },
+            loan.isOverdue && { fontWeight: '600' }
           ]}>
             {getDaysRemaining()}
           </Text>
@@ -168,28 +195,32 @@ export function LoanItem({loan, onUpdate}: Props) {
       )}
 
       {loan.isOverdue && (loan.status === 0 || loan.status === 1) && (
-        <View style={styles.warningContainer}>
-          <Text style={styles.warningText}>⚠️ Loan is overdue!</Text>
+        <View style={[styles.warningContainer, { backgroundColor: colors.error + '15', borderColor: colors.error }]}>
+          <Text style={[styles.warningText, { color: colors.error }]}>⚠️ Loan is overdue!</Text>
         </View>
       )}
       
       <View style={styles.footer}>
         {loan.status === 0 || loan.status === 1 ? (
           <TouchableOpacity
-            style={[styles.button, styles.payButton]}
+            style={[
+              styles.button, 
+              { backgroundColor: isLoading ? colors.border : colors.primary },
+              isLoading && { opacity: 0.7 }
+            ]}
             onPress={payBackLoan}
             disabled={isLoading}>
             <Text style={styles.buttonText}>
-              {isLoading ? 'Paying...' : 'Pay Back Loan'}
+              {isLoading ? 'Processing...' : 'Pay Back Loan'}
             </Text>
           </TouchableOpacity>
         ) : loan.status === 2 ? (
-          <View style={[styles.button, styles.repaidButton]}>
-            <Text style={styles.repaidButtonText}>✓ Paid</Text>
+          <View style={[styles.button, { backgroundColor: colors.success }]}>
+            <Text style={styles.buttonText}>✓ Paid</Text>
           </View>
         ) : (
-          <View style={[styles.button, styles.defaultedButton]}>
-            <Text style={styles.defaultedButtonText}>Defaulted - Device Locked</Text>
+          <View style={[styles.button, { backgroundColor: colors.textSecondary }]}>
+            <Text style={styles.buttonText}>Device Locked</Text>
           </View>
         )}
       </View>
@@ -207,131 +238,99 @@ export function LoanItem({loan, onUpdate}: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
-    padding: 16,
+    padding: 20,
+    marginHorizontal: 24,
     marginVertical: 8,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
+    borderRadius: 16,
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  overdueContainer: {
-    backgroundColor: '#ffebee',
-    borderWidth: 1,
-    borderColor: '#f44336',
-  },
-  repaidContainer: {
-    backgroundColor: '#f0f8ff',
-    opacity: 0.8,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   status: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: 12,
+    fontWeight: '600',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   date: {
     fontSize: 12,
-    color: '#999',
+    fontWeight: '500',
   },
   amountContainer: {
     alignItems: 'center',
-    marginBottom: 16,
-    padding: 12,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
+    marginBottom: 20,
+    padding: 16,
+    borderRadius: 12,
   },
   amountLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+    fontSize: 13,
+    fontWeight: '500',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   amount: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2196F3',
+    fontSize: 28,
+    fontWeight: '700',
   },
   detailsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
+    paddingVertical: 4,
   },
   detailLabel: {
     fontSize: 14,
-    color: '#666',
-    fontWeight: '600',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    fontSize: 12,
   },
   detailValue: {
     fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
-  },
-  overdueText: {
-    color: '#f44336',
-    fontWeight: 'bold',
+    fontWeight: '600',
+    textAlign: 'right',
+    flex: 1,
+    marginLeft: 16,
   },
   warningContainer: {
-    backgroundColor: '#fff3e0',
-    padding: 8,
-    borderRadius: 6,
-    marginBottom: 12,
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 16,
     alignItems: 'center',
+    borderWidth: 1,
   },
   warningText: {
-    color: '#f57c00',
-    fontWeight: 'bold',
+    fontWeight: '600',
     fontSize: 14,
   },
   footer: {
-    marginTop: 12,
+    marginTop: 8,
   },
   button: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
     alignItems: 'center',
   },
-  payButton: {
-    backgroundColor: '#4CAF50',
-  },
-  pendingButton: {
-    backgroundColor: '#ff9800',
-  },
-  repaidButton: {
-    backgroundColor: '#2196F3',
-  },
-  defaultedButton: {
-    backgroundColor: '#9e9e9e',
-  },
   buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  pendingButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  repaidButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  defaultedButtonText: {
-    color: 'white',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

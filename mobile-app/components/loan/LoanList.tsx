@@ -6,7 +6,11 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import {BrowserProvider, Contract, ethers} from 'ethers';
 import {useAccount, useWalletClient} from 'wagmi';
 import {LoanItem, LoanItemData} from './LoanItem';
@@ -26,6 +30,8 @@ export function LoanList() {
   });
   const {address, isConnected} = useAccount();
   const {data: walletClient} = useWalletClient();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
 
   const loadLoan = useCallback(async () => {
     if (!walletClient || !address) {
@@ -176,52 +182,59 @@ export function LoanList() {
 
   const renderStats = () => (
     <View style={styles.statsContainer}>
-      <View style={styles.statBox}>
-        <Text style={styles.statNumber}>{loan ? '1' : '0'}</Text>
-        <Text style={styles.statLabel}>Your Active Loans</Text>
+      <View style={[styles.statBox, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
+        <Text style={[styles.statNumber, { color: colors.primary }]}>{loan ? '1' : '0'}</Text>
+        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Your Active Loans</Text>
       </View>
-      <View style={styles.statBox}>
-        <Text style={styles.statNumber}>
+      <View style={[styles.statBox, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
+        <Text style={[styles.statNumber, { color: colors.primary }]}>
           {parseFloat(contractStats.contractBalance).toFixed(4)}
         </Text>
-        <Text style={styles.statLabel}>Available Funds (MON)</Text>
+        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Available Funds (MON)</Text>
       </View>
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Monad Loans</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Monad Loans</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Instant crypto lending</Text>
+      </View>
       
       {renderStats()}
       
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.createButton, loan && styles.disabledButton]}
+          style={[
+            styles.createButton, 
+            { backgroundColor: loan ? colors.border : colors.primary },
+            loan && styles.disabledButton
+          ]}
           onPress={() => setShowCreateForm(!showCreateForm)}
           disabled={!!loan}>
-          <Text style={styles.createButtonText}>
+          <Text style={[styles.createButtonText, { color: loan ? colors.textSecondary : '#FFFFFF' }]}>
             {showCreateForm ? '✕ Cancel' : '+ Get Loan'}
           </Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.refreshButton} onPress={loadLoan}>
-          <Text style={styles.refreshButtonText}>⟳ Refresh</Text>
+        <TouchableOpacity style={[styles.refreshButton, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]} onPress={loadLoan}>
+          <Text style={[styles.refreshButtonText, { color: colors.text }]}>⟳ Refresh</Text>
         </TouchableOpacity>
       </View>
 
       {loan && (
-        <View style={styles.warningContainer}>
-          <Text style={styles.warningText}>
+        <View style={[styles.warningContainer, { backgroundColor: colors.warning + '15', borderColor: colors.warning }]}>
+          <Text style={[styles.warningText, { color: colors.warning }]}>
             You can only have one active loan at a time. Pay back your current loan to get a new one.
           </Text>
         </View>
       )}
 
       {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadLoan}>
+        <View style={[styles.errorContainer, { backgroundColor: colors.error + '15', borderColor: colors.error }]}>
+          <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+          <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.error }]} onPress={loadLoan}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
@@ -233,7 +246,7 @@ export function LoanList() {
 
       {loading && !showCreateForm && (
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading loan...</Text>
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading loan...</Text>
         </View>
       )}
 
@@ -245,7 +258,7 @@ export function LoanList() {
         
         {loan && (
           <>
-            <Text style={styles.sectionTitle}>
+            <Text style={[styles.sectionTitle, { color: colors.text, backgroundColor: colors.backgroundSecondary }]}>
               Your Active Loan
             </Text>
             <LoanItem
@@ -257,92 +270,98 @@ export function LoanList() {
         
         {!loan && !loading && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No active loans!</Text>
-            <Text style={styles.emptySubtext}>
-              Request a loan to get started
+            <View style={[styles.emptyIcon, { backgroundColor: colors.backgroundSecondary }]}>
+              <Text style={[styles.emptyIconText, { color: colors.textSecondary }]}>💰</Text>
+            </View>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No active loans</Text>
+            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
+              Get started with your first loan
             </Text>
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    paddingTop: Platform.OS === 'android' ? 0 : 0,
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    paddingTop: 32,
+    alignItems: 'center',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 28,
+    fontWeight: '700',
     textAlign: 'center',
-    paddingVertical: 20,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
   },
   statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    paddingHorizontal: 24,
+    marginBottom: 24,
+    gap: 12,
   },
   statBox: {
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
     flex: 1,
-    marginHorizontal: 4,
-    shadowColor: '#000',
+    padding: 20,
+    borderRadius: 16,
+    alignItems: 'center',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     elevation: 2,
   },
   statNumber: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2196F3',
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 4,
   },
   statLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
+    fontSize: 13,
+    fontWeight: '500',
     textAlign: 'center',
+    lineHeight: 16,
   },
   buttonContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    gap: 8,
+    paddingHorizontal: 24,
+    marginBottom: 20,
+    gap: 12,
   },
   createButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
     flex: 1,
   },
   disabledButton: {
-    backgroundColor: '#ccc',
+    opacity: 0.6,
   },
   createButtonText: {
-    color: 'white',
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
   },
   refreshButton: {
-    backgroundColor: '#2196F3',
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 20,
-    borderRadius: 8,
+    borderRadius: 12,
+    borderWidth: 1,
   },
   refreshButtonText: {
-    color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -351,60 +370,66 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: '#e8e8e8',
+    fontWeight: '600',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   emptyState: {
     alignItems: 'center',
-    padding: 40,
-    marginTop: 40,
+    padding: 48,
+    marginTop: 32,
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emptyIconText: {
+    fontSize: 28,
   },
   emptyText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#999',
+    fontWeight: '600',
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#bbb',
     textAlign: 'center',
+    lineHeight: 20,
   },
   warningContainer: {
-    backgroundColor: '#fff3cd',
-    margin: 16,
+    marginHorizontal: 24,
+    marginBottom: 16,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#ffc107',
   },
   warningText: {
-    color: '#856404',
     fontSize: 14,
     textAlign: 'center',
+    lineHeight: 20,
+    fontWeight: '500',
   },
   errorContainer: {
-    backgroundColor: '#ffebeb',
-    margin: 16,
+    marginHorizontal: 24,
+    marginBottom: 16,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#ff6b6b',
   },
   errorText: {
-    color: '#d32f2f',
     fontSize: 14,
-    marginBottom: 8,
+    marginBottom: 12,
     textAlign: 'center',
+    lineHeight: 20,
   },
   retryButton: {
-    backgroundColor: '#ff6b6b',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 6,
+    borderRadius: 8,
     alignSelf: 'center',
   },
   retryButtonText: {
@@ -413,11 +438,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   loadingContainer: {
-    padding: 20,
+    padding: 24,
     alignItems: 'center',
   },
   loadingText: {
     fontSize: 16,
-    color: '#666',
+    fontWeight: '500',
   },
 });

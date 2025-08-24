@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccount, useWalletClient } from 'wagmi';
 import { BrowserProvider, Contract, ethers } from 'ethers';
 import { useKioskMode } from '@/hooks/useKioskMode';
@@ -8,6 +9,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { RequestModal } from './loan/RequestModal';
 import { loanContractABI, LOAN_CONTRACT_ADDRESS } from '@/utils/loanContractABI';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 interface KioskModeScreenProps {
   loanAmount: string;
@@ -20,6 +23,19 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
   const { data: walletClient } = useWalletClient();
   const { isKioskEnabled, enableKioskMode, disableKioskMode, isLoading: kioskLoading } = useKioskMode();
   const { defaultedLoan, checkLoanStatus } = useKioskContext();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+
+  // Dynamic font size based on amount length
+  const getAmountFontSize = (amount: string) => {
+    const cleanAmount = amount.replace(/[^\d.]/g, ''); // Remove non-numeric characters
+    const length = cleanAmount.length;
+    
+    if (length <= 4) return 48; // Small numbers: 1.23, 12.5
+    if (length <= 6) return 40; // Medium numbers: 123.45
+    if (length <= 8) return 32; // Large numbers: 12345.67
+    return 24; // Very large numbers: 123456.789
+  };
   
   // Determine loan status for messaging
   const isDefaulted = defaultedLoan?.status === 3;
@@ -169,93 +185,97 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
   };
 
   return (
-    <ThemedView style={[
-      styles.container, 
-      isDefaulted ? styles.defaultedContainer : isOverdue ? styles.overdueContainer : {}
-    ]}>
-      <View style={styles.lockContainer}>
-        <Text style={styles.lockIcon}>🔒</Text>
-        <ThemedText type="title" style={styles.title}>Device Locked</ThemedText>
-        <ThemedText type="subtitle" style={styles.subtitle}>
-          {isDefaulted ? 'Loan Default Mode' : isOverdue ? 'Loan Overdue Mode' : 'Loan Payment Required'}
-        </ThemedText>
-      </View>
-
-      <View style={styles.contentContainer}>
-        <View style={styles.warningContainer}>
-          <Text style={styles.warningIcon}>
-            {isDefaulted ? '🚫' : isOverdue ? '⏰' : '⚠️'}
-          </Text>
-          <ThemedText style={styles.warningTitle}>
-            {isDefaulted ? 'Loan Defaulted' : isOverdue ? 'Loan Overdue' : 'Loan Payment Required'}
-          </ThemedText>
-          <ThemedText style={styles.warningText}>
-            {isDefaulted 
-              ? 'This device has been locked due to a defaulted loan that requires immediate payment.'
-              : isOverdue 
-              ? 'This device has been locked because your loan payment is overdue.'
-              : 'This device has been locked due to an unpaid loan.'
-            }
-          </ThemedText>
-        </View>
-
-        <View style={styles.loanDetailsContainer}>
-          <ThemedText style={styles.detailLabel}>Outstanding Amount:</ThemedText>
-          <ThemedText style={styles.loanAmount}>{loanAmount} MON</ThemedText>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
+      <View style={styles.content}>
+        {/* Header Section */}
+        <View style={styles.header}>
+          <View style={[styles.statusIcon, { 
+            backgroundColor: isDefaulted ? colors.error : isOverdue ? colors.warning : colors.error 
+          }]}>
+            <Text style={styles.statusIconText}>
+              {isDefaulted ? '🚫' : isOverdue ? '⏰' : '🔒'}
+            </Text>
+          </View>
           
-          <ThemedText style={styles.detailLabel}>Wallet Address:</ThemedText>
-          <ThemedText style={styles.walletAddress}>
-            {address?.slice(0, 8)}...{address?.slice(-6)}
-          </ThemedText>
+          <Text style={[styles.title, { color: colors.text }]}>Device Locked</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            {isDefaulted ? 'Loan defaulted' : isOverdue ? 'Payment overdue' : 'Payment required'}
+          </Text>
         </View>
 
-        <View style={styles.instructionsContainer}>
-          <ThemedText style={styles.instructionsTitle}>To Unlock This Device:</ThemedText>
-          <ThemedText style={styles.instructionsText}>
-            1. Pay back the outstanding loan amount
-          </ThemedText>
-          <ThemedText style={styles.instructionsText}>
-            2. The device will automatically unlock once payment is confirmed
-          </ThemedText>
-          <ThemedText style={styles.instructionsText}>
-            3. Contact support if you need assistance
-          </ThemedText>
+        {/* Amount Card */}
+        <View style={[styles.amountCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
+          <Text style={[styles.amountLabel, { color: colors.textSecondary }]}>Amount to Repay</Text>
+          <View style={styles.amountContainer}>
+            <Text style={[
+              styles.amountValue, 
+              { 
+                color: colors.text,
+                fontSize: getAmountFontSize(loanAmount),
+                lineHeight: getAmountFontSize(loanAmount) * 1.1
+              }
+            ]}>{loanAmount}</Text>
+            <Text style={[
+              styles.currencyLabel, 
+              { 
+                color: colors.textSecondary,
+                fontSize: Math.max(getAmountFontSize(loanAmount) * 0.375, 14) // Scale currency with amount but min 14px
+              }
+            ]}>MON</Text>
+          </View>
+          <View style={[styles.walletContainer, { backgroundColor: colors.backgroundSecondary }]}>
+            <Text style={[styles.walletLabel, { color: colors.textSecondary }]}>Wallet</Text>
+            <Text style={[styles.walletAddress, { color: colors.text }]}>
+              {address?.slice(0, 6)}...{address?.slice(-4)}
+            </Text>
+          </View>
         </View>
 
+        {/* Action Button */}
         <TouchableOpacity 
-          style={styles.paymentButton} 
+          style={[
+            styles.payButton, 
+            { backgroundColor: isLoading ? colors.border : colors.primary },
+            isLoading && { opacity: 0.7 }
+          ]} 
           onPress={payBackLoan}
           disabled={isLoading || kioskLoading}
         >
-          <ThemedText style={styles.paymentButtonText}>
-            {isLoading 
-              ? 'Processing Payment...' 
-              : isDefaulted 
-              ? 'Pay Defaulted Loan & Unlock'
-              : isOverdue
-              ? 'Pay Overdue Loan & Unlock'
-              : 'Pay Back Loan & Unlock'
-            }
-          </ThemedText>
+          <Text style={styles.payButtonText}>
+            {isLoading ? 'Processing...' : 'Pay & Unlock Device'}
+          </Text>
         </TouchableOpacity>
 
+        {/* Instructions */}
+        <View style={[styles.instructionsCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
+          <Text style={[styles.instructionsTitle, { color: colors.text }]}>How to unlock</Text>
+          <Text style={[styles.instructionItem, { color: colors.textSecondary }]}>
+            • Complete the loan payment above
+          </Text>
+          <Text style={[styles.instructionItem, { color: colors.textSecondary }]}>
+            • Device unlocks automatically
+          </Text>
+          <Text style={[styles.instructionItem, { color: colors.textSecondary }]}>
+            • Contact support if needed
+          </Text>
+        </View>
+
+        {/* Emergency Button */}
         <TouchableOpacity 
-          style={styles.emergencyButton} 
+          style={[styles.emergencyButton, { borderColor: colors.border }]} 
           onPress={handleEmergencyContact}
         >
-          <ThemedText style={styles.emergencyButtonText}>Emergency Contact</ThemedText>
+          <Text style={[styles.emergencyButtonText, { color: colors.textSecondary }]}>Emergency Contact</Text>
         </TouchableOpacity>
-      </View>
 
-      <View style={styles.statusContainer}>
-        <ThemedText style={styles.statusText}>
-          Status: {isKioskEnabled ? 'LOCKED' : 'UNLOCKED'}
-        </ThemedText>
-        <ThemedText style={styles.platformText}>
-          {Platform.OS === 'android' 
-            ? 'Kiosk mode active - all device functions restricted' 
-            : 'Kiosk mode only available on Android'}
-        </ThemedText>
+        {/* Status Footer */}
+        <View style={styles.footer}>
+          <View style={[styles.statusDot, { backgroundColor: isKioskEnabled ? colors.error : colors.success }]} />
+          <Text style={[styles.statusFooterText, { color: colors.textSecondary }]}>
+            {isKioskEnabled ? 'Device locked' : 'Device unlocked'} • 
+            {Platform.OS === 'android' ? 'Kiosk mode active' : 'iOS compatibility mode'}
+          </Text>
+        </View>
       </View>
 
       <RequestModal
@@ -265,161 +285,161 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
         rpcError={error ? 'Error processing payment from kiosk mode' : undefined}
         onClose={() => setRequestModalVisible(false)}
       />
-    </ThemedView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f44336', // Default red for general lock
-    padding: 20,
+    paddingTop: Platform.OS === 'android' ? 0 : 0,
   },
-  overdueContainer: {
-    backgroundColor: '#ff9800', // Orange for overdue
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+    justifyContent: 'center',
   },
-  defaultedContainer: {
-    backgroundColor: '#d32f2f', // Dark red for defaulted
-  },
-  lockContainer: {
+  header: {
     alignItems: 'center',
-    marginTop: 40,
-    marginBottom: 30,
+    marginBottom: 48,
   },
-  lockIcon: {
-    fontSize: 60,
-    marginBottom: 10,
+  statusIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  statusIconText: {
+    fontSize: 36,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
+    fontSize: 32,
+    fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 5,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 18,
-    color: 'white',
     textAlign: 'center',
-    opacity: 0.9,
+    fontWeight: '500',
   },
-  contentContainer: {
-    flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 15,
-    padding: 20,
-    marginHorizontal: 10,
+  amountCard: {
+    padding: 24,
+    borderRadius: 16,
+    marginBottom: 32,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  warningContainer: {
-    alignItems: 'center',
-    backgroundColor: '#fff3e0',
-    padding: 20,
-    borderRadius: 10,
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: '#f57c00',
-  },
-  warningIcon: {
-    fontSize: 40,
-    marginBottom: 10,
-  },
-  warningTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#e65100',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  warningText: {
-    fontSize: 16,
-    color: '#bf360c',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  loanDetailsContainer: {
-    backgroundColor: '#f5f5f5',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: '#666',
+  amountLabel: {
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 5,
+    marginBottom: 16,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    textAlign: 'center',
   },
-  loanAmount: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#f44336',
-    marginBottom: 15,
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  amountValue: {
+    fontWeight: '700',
+  },
+  currencyLabel: {
+    fontWeight: '600',
+    marginLeft: 8,
+    marginBottom: 4,
+  },
+  walletContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  walletLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   walletAddress: {
     fontSize: 14,
     fontFamily: 'monospace',
-    color: '#333',
-    backgroundColor: '#e0e0e0',
-    padding: 8,
-    borderRadius: 4,
-    textAlign: 'center',
+    fontWeight: '600',
   },
-  instructionsContainer: {
-    marginBottom: 25,
+  payButton: {
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  payButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  instructionsCard: {
+    padding: 24,
+    borderRadius: 16,
+    marginBottom: 24,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   instructionsTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
+    fontWeight: '600',
+    marginBottom: 16,
   },
-  instructionsText: {
+  instructionItem: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-    lineHeight: 18,
-  },
-  paymentButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  paymentButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
+    lineHeight: 20,
+    marginBottom: 8,
   },
   emergencyButton: {
-    backgroundColor: '#ff9800',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 20,
+    borderWidth: 1,
+    marginBottom: 32,
   },
   emergencyButtonText: {
-    color: 'white',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
-  statusContainer: {
+  footer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 15,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.3)',
+    justifyContent: 'center',
+    marginTop: 'auto',
   },
-  statusText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 5,
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
   },
-  platformText: {
+  statusFooterText: {
     fontSize: 12,
-    color: 'white',
-    textAlign: 'center',
-    opacity: 0.8,
+    fontWeight: '500',
   },
 });

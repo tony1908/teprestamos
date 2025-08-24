@@ -16,7 +16,8 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Platform } from "react-native";
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import LoginScreen from '@/components/LoginScreen';
 import { KioskProvider, useKioskContext } from '@/contexts/KioskContext';
 import { OnboardingProvider, useOnboarding } from '@/contexts/OnboardingContext';
@@ -72,9 +73,17 @@ function OnboardingGate() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#ea4c89" />
-      </View>
+      <SafeAreaProvider>
+        <View style={{ 
+          flex: 1, 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          backgroundColor: '#ffffff',
+          paddingTop: Platform.OS === 'android' ? 24 : 0 
+        }}>
+          <ActivityIndicator size="large" color="#2563EB" />
+        </View>
+      </SafeAreaProvider>
     );
   }
 
@@ -112,7 +121,6 @@ function MainApp() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="auto" />
     </>
   );
 }
@@ -129,16 +137,19 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <WagmiProvider config={wagmiConfig}>
-        <QueryClientProvider client={queryClient}>
-          <AppContent />
-          {/* This is a workaround for the Android modal issue. https://github.com/expo/expo/issues/32991#issuecomment-2489620459 */}
-          <View style={{ position: "absolute", height: "100%", width: "100%" }}>
-            <AppKit />
-          </View>
-        </QueryClientProvider>
-      </WagmiProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <WagmiProvider config={wagmiConfig}>
+          <QueryClientProvider client={queryClient}>
+            <StatusBar style="dark" backgroundColor="#ffffff" />
+            <AppContent />
+            {/* This is a workaround for the Android modal issue. https://github.com/expo/expo/issues/32991#issuecomment-2489620459 */}
+            <View style={{ position: "absolute", height: "100%", width: "100%" }}>
+              <AppKit />
+            </View>
+          </QueryClientProvider>
+        </WagmiProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
