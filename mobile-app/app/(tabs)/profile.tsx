@@ -1,9 +1,8 @@
 import { AppKitButton } from '@reown/appkit-wagmi-react-native';
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity, Alert, ScrollView, Platform } from 'react-native';
+import { StyleSheet, View, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccount } from 'wagmi';
-import { useOnboarding } from '@/contexts/OnboardingContext';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -12,27 +11,8 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function ProfileScreen() {
   const { address } = useAccount();
-  const { resetOnboarding } = useOnboarding();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-
-  const handleResetOnboarding = () => {
-    Alert.alert(
-      'Reset Onboarding',
-      'This will reset the onboarding flow. You will need to complete wallet connection and Palenca setup again.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Reset', 
-          style: 'destructive',
-          onPress: async () => {
-            await resetOnboarding();
-            Alert.alert('Success', 'Onboarding has been reset. Please restart the app.');
-          }
-        }
-      ]
-    );
-  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
@@ -90,13 +70,6 @@ export default function ProfileScreen() {
         <View style={[styles.section, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
           <ThemedText style={[styles.sectionTitle, { color: colors.text }]}>Wallet Management</ThemedText>
           <AppKitButton connectStyle={styles.appKitButton} />
-        </View>
-
-        <View style={[styles.section, { backgroundColor: colors.card, shadowColor: colors.shadow, borderColor: colors.border }]}>
-          <ThemedText style={[styles.sectionTitle, { color: colors.text }]}>Development Options</ThemedText>
-          <TouchableOpacity style={[styles.resetButton, { backgroundColor: colors.error }]} onPress={handleResetOnboarding}>
-            <ThemedText style={styles.resetButtonText}>Reset Onboarding</ThemedText>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -235,15 +208,5 @@ const styles = StyleSheet.create({
   },
   appKitButton: {
     marginTop: 8,
-  },
-  resetButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  resetButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 16,
   },
 });

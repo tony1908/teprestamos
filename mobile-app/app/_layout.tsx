@@ -17,6 +17,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { View, ActivityIndicator, Platform } from "react-native";
+import { useEffect } from "react";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import LoginScreen from '@/components/LoginScreen';
 import { KioskProvider, useKioskContext } from '@/contexts/KioskContext';
@@ -43,7 +44,7 @@ const metadata = {
   },
 };
 
-const chains = [mainnet, monadTestnet] as const;
+const chains = [monadTestnet] as const;
 const auth = authConnector({ projectId, metadata });
 
 const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata, extraConnectors: [auth] });
@@ -68,8 +69,16 @@ function AppContent() {
 }
 
 function OnboardingGate() {
-  const { hasCompletedOnboarding, isLoading, completeOnboarding } = useOnboarding();
+  const { hasCompletedOnboarding, isLoading, completeOnboarding, resetOnboarding } = useOnboarding();
   const { isConnected } = useAccount();
+
+  // Reset onboarding when wallet disconnects
+  useEffect(() => {
+    if (hasCompletedOnboarding && !isConnected) {
+      console.log('Wallet disconnected - resetting onboarding');
+      resetOnboarding();
+    }
+  }, [isConnected, hasCompletedOnboarding, resetOnboarding]);
 
   if (isLoading) {
     return (

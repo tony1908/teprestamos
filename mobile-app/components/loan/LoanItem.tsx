@@ -296,11 +296,10 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 0.3,
-    fontSize: 12,
   },
   detailValue: {
     fontSize: 14,
