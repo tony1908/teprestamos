@@ -23,7 +23,7 @@ interface Props {
 }
 
 export function LoanRequestScreen({visible, onClose, onLoanCreated}: Props) {
-  const [amount, setAmount] = useState('0.1');
+  const [amount, setAmount] = useState('1');
   const [days, setDays] = useState('7');
   const [requestModalVisible, setRequestModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -69,7 +69,7 @@ export function LoanRequestScreen({visible, onClose, onLoanCreated}: Props) {
       setData(
         `Loan approved and funded! Transaction hash: ${tx.hash}\nAmount: ${amount} MXN received\nDue in: ${days} days`,
       );
-      setAmount('0.1');
+      setAmount('1');
       setDays('7');
       onLoanCreated();
       
@@ -100,7 +100,7 @@ export function LoanRequestScreen({visible, onClose, onLoanCreated}: Props) {
   const isValidAmount = () => {
     try {
       const amountNum = parseFloat(amount);
-      return amountNum > 0 && amountNum <= 10; // Max 10 MON loan
+      return amountNum > 0 && amountNum <= 300; // Max 10 MON loan
     } catch {
       return false;
     }
@@ -152,7 +152,7 @@ export function LoanRequestScreen({visible, onClose, onLoanCreated}: Props) {
               {/* Amount Input */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Loan Amount</Text>
-                <Text style={styles.helperText}>Maximum: 10 MXN</Text>
+                <Text style={styles.helperText}>Maximum: 300 MXN</Text>
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={[styles.input, !isValidAmount() && styles.invalidInput]}
