@@ -1,11 +1,11 @@
 import { AppKitButton } from '@reown/appkit-wagmi-react-native';
 import React from 'react';
-import { StyleSheet, View, Platform } from 'react-native';
+import { StyleSheet, View, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
+import { loginImage } from '@/constants/Images';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function LoginScreen() {
@@ -13,156 +13,97 @@ export default function LoginScreen() {
   const colors = Colors[colorScheme ?? 'light'];
   
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ThemedView style={styles.content}>
-        <View style={styles.headerSection}>
-          <View style={[styles.logoContainer, { backgroundColor: colors.primary }]}>
-            <ThemedText style={styles.logoText}>TP</ThemedText>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.imageContainer}>
+        <Image 
+          source={{ uri: `data:image/png;base64,${loginImage}` }}
+          style={styles.loginImage}
+          resizeMode="cover"
+        />
+      </View>
+      
+      <SafeAreaView style={styles.contentSection}>
+        <View style={styles.mainContent}>
+          <View style={styles.titleContainer}>
+            <ThemedText style={[styles.titleText, { color: colors.text }]}>Te Prestamos</ThemedText>
+            <ThemedText style={[styles.sloganText, { color: colors.textSecondary }]}>
+              Your crypto. Your terms. Instantly.
+            </ThemedText>
           </View>
           
-          <ThemedText style={[styles.titleText, { color: colors.text }]}>Te Prestamos</ThemedText>
-          <ThemedText style={[styles.subtitleText, { color: colors.textSecondary }]}>
-            Instant crypto loans on Monad
-          </ThemedText>
-        </View>
-        
-        <View style={styles.featuresSection}>
-          <View style={[styles.featureCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
-            <View style={[styles.featureIcon, { backgroundColor: colors.primary + '15' }]}>
-              <ThemedText style={[styles.featureIconText, { color: colors.primary }]}>⚡</ThemedText>
-            </View>
-            <View style={styles.featureContent}>
-              <ThemedText style={[styles.featureTitle, { color: colors.text }]}>Instant Approval</ThemedText>
-              <ThemedText style={[styles.featureDescription, { color: colors.textSecondary }]}>Get funds in seconds</ThemedText>
-            </View>
-          </View>
-          
-          <View style={[styles.featureCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
-            <View style={[styles.featureIcon, { backgroundColor: colors.success + '15' }]}>
-              <ThemedText style={[styles.featureIconText, { color: colors.success }]}>💰</ThemedText>
-            </View>
-            <View style={styles.featureContent}>
-              <ThemedText style={[styles.featureTitle, { color: colors.text }]}>Flexible Terms</ThemedText>
-              <ThemedText style={[styles.featureDescription, { color: colors.textSecondary }]}>1-30 day repayment</ThemedText>
-            </View>
-          </View>
-          
-          <View style={[styles.featureCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
-            <View style={[styles.featureIcon, { backgroundColor: colors.warning + '15' }]}>
-              <ThemedText style={[styles.featureIconText, { color: colors.warning }]}>🔒</ThemedText>
-            </View>
-            <View style={styles.featureContent}>
-              <ThemedText style={[styles.featureTitle, { color: colors.text }]}>Secure</ThemedText>
-              <ThemedText style={[styles.featureDescription, { color: colors.textSecondary }]}>Blockchain secured</ThemedText>
-            </View>
+          <View style={styles.buttonContainer}>
+            <AppKitButton 
+              connectStyle={[styles.connectButton, { backgroundColor: colors.primary }]}
+              label='Connect Wallet'
+            />
           </View>
         </View>
-        
-        <View style={styles.actionSection}>
-          <ThemedText style={[styles.stepText, { color: colors.textSecondary }]}>
-            Step 1 of 2: Connect Wallet
-          </ThemedText>
-          <AppKitButton 
-            connectStyle={styles.connectButton}
-            label='Connect Wallet'
-          />
-        </View>
-      </ThemedView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? 0 : 0,
   },
-  content: {
+  imageContainer: {
+    width: '100%',
+    height: '65%',
+  },
+  loginImage: {
+    width: '100%',
+    height: '100%',
+  },
+  contentSection: {
     flex: 1,
-    padding: 24,
-    paddingTop: 32,
+    backgroundColor: 'transparent',
   },
-  headerSection: {
+  mainContent: {
+    flex: 1,
+    paddingHorizontal: 32,
+    paddingTop: 20,
+    paddingBottom: 60,
+    justifyContent: 'flex-start',
     alignItems: 'center',
-    marginBottom: 48,
+    gap: 40,
   },
-  logoContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    justifyContent: 'center',
+  titleContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    paddingHorizontal: 16,
   },
-  logoText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
+  sloganText: {
+    fontSize: 18,
+    fontWeight: '400',
+    textAlign: 'center',
+    marginTop: 12,
+    lineHeight: 24,
+    maxWidth: 300,
+  },
+  buttonContainer: {
+    alignItems: 'center',
+    width: '100%',
   },
   titleText: {
-    fontSize: 28,
+    fontSize: 34,
     fontWeight: '700',
-    marginBottom: 8,
     textAlign: 'center',
-  },
-  subtitleText: {
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  featuresSection: {
-    flex: 1,
-    gap: 16,
-    marginBottom: 32,
-  },
-  featureCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    borderRadius: 16,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  featureIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  featureIconText: {
-    fontSize: 20,
-  },
-  featureContent: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  featureDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  actionSection: {
-    alignItems: 'center',
-    paddingBottom: 24,
-  },
-  stepText: {
-    fontSize: 14,
-    marginBottom: 24,
-    textAlign: 'center',
-    fontWeight: '500',
+    letterSpacing: -0.5,
+    lineHeight: 40,
+    includeFontPadding: false,
   },
   connectButton: {
-    minWidth: 200,
-    borderRadius: 12,
+    paddingVertical: 20,
+    paddingHorizontal: 48,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '85%',
+    minHeight: 60,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });

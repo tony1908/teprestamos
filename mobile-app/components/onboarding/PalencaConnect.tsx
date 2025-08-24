@@ -11,7 +11,7 @@ interface PalencaConnectProps {
 const PalencaConnect: React.FC<PalencaConnectProps> = ({ 
   onSuccess, 
   onError, 
-  widgetId = 'x' 
+  widgetId = '' 
 }) => {
   const [loading, setLoading] = useState(true);
 
@@ -48,16 +48,10 @@ const PalencaConnect: React.FC<PalencaConnectProps> = ({
   };
 
   const baseUrl: string = 'https://connect.palenca.com';
-  const uri: string = `${baseUrl}?widget_id=${widgetId}&primary_color=ea4c89`;
+  const uri: string = `${baseUrl}?widget_id=${widgetId}&primary_color=9859c5`;
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Connect Your Account</Text>
-        <Text style={styles.subtitle}>
-          Link your Gig Worker account securely to continue
-        </Text>
-      </View>
 
       {loading && (
         <View style={styles.loadingContainer}>
@@ -89,21 +83,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    padding: 16,
+    padding: 8,
     backgroundColor: '#f8f9fa',
-    //borderBottomWidth: 1,
     borderBottomColor: '#e9ecef',
+    minHeight: 60,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666',
-    lineHeight: 20,
+    lineHeight: 18,
   },
   webview: {
     flex: 1,

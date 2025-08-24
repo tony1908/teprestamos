@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, Alert, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccount } from 'wagmi';
 import PalencaConnect from './PalencaConnect';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '@/constants/Colors';
+import { onbaordingImage } from '@/constants/Images';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 interface OnboardingFlowProps {
@@ -53,8 +54,16 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   };
 
   const renderWalletConnection = () => (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.content}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.imageContainer}>
+        <Image 
+          source={{ uri: `data:image/png;base64,${onbaordingImage}` }}
+          style={styles.loginImage}
+          resizeMode="cover"
+        />
+      </View>
+      
+      <SafeAreaView style={styles.contentSection}>
         <View style={styles.progressContainer}>
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { backgroundColor: colors.primary, width: '50%' }]} />
@@ -62,15 +71,16 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           <Text style={[styles.progressText, { color: colors.textSecondary }]}>Step 1 of 2</Text>
         </View>
         
-        <View style={styles.stepContent}>
-          <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-            <Text style={styles.iconText}>1</Text>
+        <View style={styles.mainContent}>
+          <View style={styles.titleContainer}>
+            <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
+              <Text style={styles.iconText}>1</Text>
+            </View>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Connect Your Wallet</Text>
+            <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
+              Connect your crypto wallet to access secure lending on Monad
+            </Text>
           </View>
-          
-          <Text style={[styles.stepTitle, { color: colors.text }]}>Connect Your Wallet</Text>
-          <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
-            Connect your crypto wallet to access secure lending on Monad
-          </Text>
           
           <View style={[styles.statusContainer, { 
             backgroundColor: isConnected ? colors.success + '15' : colors.backgroundSecondary 
@@ -82,24 +92,23 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             </Text>
           </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 
   const renderPalencaConnection = () => (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.content}>
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { backgroundColor: colors.primary, width: '100%' }]} />
-          </View>
-          <Text style={[styles.progressText, { color: colors.textSecondary }]}>Step 2 of 2</Text>
-        </View>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.imageContainer}>
+        <Image 
+          source={{ uri: `data:image/png;base64,${onbaordingImage}` }}
+          style={styles.loginImage}
+          resizeMode="cover"
+        />
+      </View>
+      
+      <SafeAreaView style={styles.contentSection}>
         
         <View style={styles.stepHeaderCompact}>
-          <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-            <Text style={styles.iconText}>2</Text>
-          </View>
           
           <Text style={[styles.stepTitle, { color: colors.text }]}>Link Gig Account</Text>
           <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
@@ -111,16 +120,16 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           <PalencaConnect
             onSuccess={handlePalencaSuccess}
             onError={handlePalencaError}
-            widgetId="x"
+            widgetId=""
           />
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 
   const renderComplete = () => (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.content}>
+      <View style={styles.mainContent}>
         <View style={styles.completeContainer}>
           <View style={[styles.successIcon, { backgroundColor: colors.success }]}>
             <Text style={styles.successIconText}>✓</Text>
@@ -149,14 +158,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: Platform.OS === 'android' ? 0 : 0,
   },
-  content: {
-    flex: 1,
-    padding: 24,
-    paddingBottom: -10,
-  },
   progressContainer: {
-    marginBottom: 48,
-    marginTop: 16,
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
   progressBar: {
     height: 4,
@@ -174,10 +179,28 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  stepContent: {
+  imageContainer: {
+    width: '100%',
+    height: '20%',
+  },
+  loginImage: {
+    width: '100%',
+    height: '100%',
+  },
+  contentSection: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+  mainContent: {
+    flex: 1,
+    paddingHorizontal: 32,
+    paddingBottom: 32,
+    justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  titleContainer: {
+    alignItems: 'center',
+    paddingHorizontal: 16,
   },
   stepHeader: {
     alignItems: 'center',
@@ -193,7 +216,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   iconText: {
     fontSize: 20,
@@ -201,23 +224,25 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   stepTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '700',
-    marginBottom: 12,
+    marginBottom: 8,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   stepDescription: {
-    fontSize: 16,
+    fontSize: 15,
     textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-    paddingHorizontal: 16,
+    lineHeight: 22,
+    paddingHorizontal: 8,
+    maxWidth: 280,
   },
   statusContainer: {
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
-    marginTop: 16,
+    width: '100%',
+    alignItems: 'center',
   },
   statusText: {
     fontSize: 16,
@@ -227,7 +252,7 @@ const styles = StyleSheet.create({
   palencaContainer: {
     flex: 1,
     marginTop: 0,
-    maxHeight: 500,
+    minHeight: 600,
   },
   completeContainer: {
     flex: 1,
