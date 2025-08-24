@@ -101,9 +101,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             <Text style={styles.iconText}>2</Text>
           </View>
           
-          <Text style={[styles.stepTitle, { color: colors.text }]}>Link Bank Account</Text>
+          <Text style={[styles.stepTitle, { color: colors.text }]}>Link Gig Account</Text>
           <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
-            Securely connect your bank account for loan verification
+            Securely connect your gig account for loan verification
           </Text>
         </View>
         
@@ -111,7 +111,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           <PalencaConnect
             onSuccess={handlePalencaSuccess}
             onError={handlePalencaError}
-            widgetId=""
+            widgetId="x"
           />
         </View>
       </View>
@@ -128,7 +128,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           
           <Text style={[styles.completeTitle, { color: colors.text }]}>Setup Complete!</Text>
           <Text style={[styles.completeDescription, { color: colors.textSecondary }]}>
-            Your wallet and bank account are connected. Ready to start lending!
+            Your wallet and gig account are connected. Ready to start lending!
           </Text>
         </View>
       </View>
@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 24,
+    paddingBottom: -10,
   },
   progressContainer: {
     marginBottom: 48,
@@ -180,11 +181,11 @@ const styles = StyleSheet.create({
   },
   stepHeader: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 18,
   },
   stepHeaderCompact: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 2,
   },
   iconContainer: {
     width: 56,
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
   },
   palencaContainer: {
     flex: 1,
-    marginTop: 8,
+    marginTop: 0,
     maxHeight: 500,
   },
   completeContainer: {

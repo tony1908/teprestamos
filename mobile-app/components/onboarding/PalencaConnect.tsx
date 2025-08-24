@@ -11,7 +11,7 @@ interface PalencaConnectProps {
 const PalencaConnect: React.FC<PalencaConnectProps> = ({ 
   onSuccess, 
   onError, 
-  widgetId = '' 
+  widgetId = 'x' 
 }) => {
   const [loading, setLoading] = useState(true);
 
@@ -55,14 +55,14 @@ const PalencaConnect: React.FC<PalencaConnectProps> = ({
       <View style={styles.header}>
         <Text style={styles.title}>Connect Your Account</Text>
         <Text style={styles.subtitle}>
-          Link your bank account securely with Palenca to continue
+          Link your Gig Worker account securely to continue
         </Text>
       </View>
 
       {loading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#ea4c89" />
-          <Text style={styles.loadingText}>Loading Palenca...</Text>
+          <Text style={styles.loadingText}>Loading...</Text>
         </View>
       )}
 
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   header: {
     padding: 16,
     backgroundColor: '#f8f9fa',
-    borderBottomWidth: 1,
+    //borderBottomWidth: 1,
     borderBottomColor: '#e9ecef',
   },
   title: {

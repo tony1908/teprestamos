@@ -15,6 +15,7 @@ import {BrowserProvider, Contract, ethers} from 'ethers';
 import {useAccount, useWalletClient} from 'wagmi';
 import {LoanItem, LoanItemData} from './LoanItem';
 import {CreateLoan} from './CreateLoan';
+import {LoanRequestScreen} from './LoanRequestScreen';
 import {
   loanContractABI,
   LOAN_CONTRACT_ADDRESS,
@@ -24,6 +25,7 @@ export function LoanList() {
   const [loan, setLoan] = useState<LoanItemData | null>(null);
   const [loading, setLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showLoanRequestScreen, setShowLoanRequestScreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [contractStats, setContractStats] = useState({
     contractBalance: '0',
@@ -173,6 +175,7 @@ export function LoanList() {
     loadLoan();
     loadContractStats();
     setShowCreateForm(false);
+    setShowLoanRequestScreen(false);
   };
 
   const handleLoanUpdated = () => {
@@ -180,29 +183,12 @@ export function LoanList() {
     loadContractStats();
   };
 
-  const renderStats = () => (
-    <View style={styles.statsContainer}>
-      <View style={[styles.statBox, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
-        <Text style={[styles.statNumber, { color: colors.primary }]}>{loan ? '1' : '0'}</Text>
-        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Your Active Loans</Text>
-      </View>
-      <View style={[styles.statBox, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
-        <Text style={[styles.statNumber, { color: colors.primary }]}>
-          {parseFloat(contractStats.contractBalance).toFixed(4)}
-        </Text>
-        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Available Funds (MON)</Text>
-      </View>
-    </View>
-  );
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Monad Loans</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Te prestamos</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Instant crypto lending</Text>
       </View>
-      
-      {renderStats()}
       
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -211,16 +197,14 @@ export function LoanList() {
             { backgroundColor: loan ? colors.border : colors.primary },
             loan && styles.disabledButton
           ]}
-          onPress={() => setShowCreateForm(!showCreateForm)}
+          onPress={() => setShowLoanRequestScreen(true)}
           disabled={!!loan}>
           <Text style={[styles.createButtonText, { color: loan ? colors.textSecondary : '#FFFFFF' }]}>
-            {showCreateForm ? '✕ Cancel' : '+ Get Loan'}
+            + Get Loan
           </Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={[styles.refreshButton, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]} onPress={loadLoan}>
-          <Text style={[styles.refreshButtonText, { color: colors.text }]}>⟳ Refresh</Text>
-        </TouchableOpacity>
+
       </View>
 
       {loan && (
@@ -280,6 +264,12 @@ export function LoanList() {
           </View>
         )}
       </ScrollView>
+
+      <LoanRequestScreen
+        visible={showLoanRequestScreen}
+        onClose={() => setShowLoanRequestScreen(false)}
+        onLoanCreated={handleLoanCreated}
+      />
     </SafeAreaView>
   );
 }
