@@ -8,7 +8,8 @@ import { useKioskContext } from '@/contexts/KioskContext';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { RequestModal } from './loan/RequestModal';
-import { loanContractABI, LOAN_CONTRACT_ADDRESS } from '@/utils/loanContractABI';
+import { loanContractABI, LOAN_CONTRACT_ADDRESS, TOKEN_CONTRACT_ADDRESS } from '@/utils/loanContractABI';
+import { erc20ABI } from '@/utils/erc20ABI';
 import { Colors } from '@/constants/Colors';
 import { loginImage } from '@/constants/Images';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -83,6 +84,25 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
         signer,
       );
 
+      // Create token contract instance
+      const tokenContract = new Contract(
+        TOKEN_CONTRACT_ADDRESS,
+        erc20ABI,
+        signer,
+      );
+      
+      const loanAmount = BigInt(defaultedLoan.amount);
+      
+      // Check current allowance
+      const currentAllowance = await tokenContract.allowance(address, LOAN_CONTRACT_ADDRESS);
+      
+      // If allowance is insufficient, approve first
+      if (currentAllowance < loanAmount) {
+        setData('Step 1/3: Approving token transfer...');
+        const approveTx = await tokenContract.approve(LOAN_CONTRACT_ADDRESS, loanAmount);
+        await approveTx.wait();
+      }
+
       let paymentSuccessful = false;
       
       // First attempt: Try direct payment (in case contract allows it)
@@ -91,14 +111,13 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
           ? 'Processing overdue loan payment...' 
           : 'Attempting direct loan payment...'
         );
-        const payTx = await contract.payBackLoan({
-          value: defaultedLoan.amount,
-        });
+        const payTx = await contract.payBackLoan(loanAmount);
+        await payTx.wait();
         
         setData(
           `✅ Loan payment successful!\n\nTransaction Hash: ${payTx.hash}\nAmount Paid: ${ethers.formatEther(
             defaultedLoan.amount,
-          )} MON\n\n🔓 Device unlocking...`,
+          )} tokens\n\n🔓 Device unlocking...`,
         );
         paymentSuccessful = true;
         
@@ -114,14 +133,13 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
           
           setData('Step 2/2: Processing loan payment...');
           
-          const payTx = await contract.payBackLoan({
-            value: defaultedLoan.amount,
-          });
+          const payTx = await contract.payBackLoan(loanAmount);
+          await payTx.wait();
           
           setData(
             `✅ Loan payment successful!\n\nTransaction Hash: ${payTx.hash}\nAmount Paid: ${ethers.formatEther(
               defaultedLoan.amount,
-            )} MON\n\n🔓 Device unlocking...`,
+            )} tokens\n\n🔓 Device unlocking...`,
           );
           paymentSuccessful = true;
           
@@ -234,7 +252,7 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
                 color: colors.textSecondary,
                 fontSize: Math.max(getAmountFontSize(loanAmount) * 0.375, 14) // Scale currency with amount but min 14px
               }
-            ]}>MON</Text>
+            ]}>Tokens</Text>
           </View>
           <View style={[styles.walletContainer, { backgroundColor: colors.backgroundSecondary }]}>
             <Text style={[styles.walletLabel, { color: colors.textSecondary }]}>Wallet</Text>

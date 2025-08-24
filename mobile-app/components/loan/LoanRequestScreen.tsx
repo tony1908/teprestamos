@@ -61,13 +61,13 @@ export function LoanRequestScreen({visible, onClose, onLoanCreated}: Props) {
       const daysInSeconds = parseInt(days) * 24 * 60 * 60;
       const maxPaymentDate = Math.floor(Date.now() / 1000) + daysInSeconds;
       
-      console.log('LoanRequestScreen: Sending transaction with amount:', amount, 'MON, days:', days);
+      console.log('LoanRequestScreen: Sending transaction with amount:', amount, 'tokens, days:', days);
       
       const tx = await contract.requestLoan(amountWei, maxPaymentDate);
       
       console.log('LoanRequestScreen: Transaction sent:', tx.hash);
       setData(
-        `Loan approved and funded! Transaction hash: ${tx.hash}\nAmount: ${amount} MON received\nDue in: ${days} days`,
+        `Loan approved and funded! Transaction hash: ${tx.hash}\nAmount: ${amount} tokens received\nDue in: ${days} days`,
       );
       setAmount('0.1');
       setDays('7');
@@ -84,7 +84,7 @@ export function LoanRequestScreen({visible, onClose, onLoanCreated}: Props) {
       setError(true);
       
       if (e.message.includes('insufficient funds')) {
-        setData('Insufficient funds. Please make sure you have enough MON tokens for gas fees.');
+        setData('Insufficient funds. Please make sure you have enough tokens for gas fees.');
       } else if (e.message.includes('user rejected')) {
         setData('Transaction was rejected by user.');
       } else if (e.message.includes('already has an active loan')) {
@@ -152,7 +152,7 @@ export function LoanRequestScreen({visible, onClose, onLoanCreated}: Props) {
               {/* Amount Input */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Loan Amount</Text>
-                <Text style={styles.helperText}>Maximum: 10 MON</Text>
+                <Text style={styles.helperText}>Maximum: 10 tokens</Text>
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={[styles.input, !isValidAmount() && styles.invalidInput]}
@@ -161,7 +161,7 @@ export function LoanRequestScreen({visible, onClose, onLoanCreated}: Props) {
                     placeholder="0.1"
                     keyboardType="decimal-pad"
                   />
-                  <Text style={styles.currency}>MON</Text>
+                  <Text style={styles.currency}>Tokens</Text>
                 </View>
               </View>
               

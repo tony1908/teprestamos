@@ -14,14 +14,16 @@ import { Colors } from '@/constants/Colors';
 import { loansImage } from '@/constants/Images';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import {BrowserProvider, Contract, ethers} from 'ethers';
-import {useAccount, useWalletClient} from 'wagmi';
+import {useAccount, useWalletClient, useBalance} from 'wagmi';
 import {LoanItem, LoanItemData} from './LoanItem';
 import {CreateLoan} from './CreateLoan';
 import {LoanRequestScreen} from './LoanRequestScreen';
 import {
   loanContractABI,
   LOAN_CONTRACT_ADDRESS,
+  TOKEN_CONTRACT_ADDRESS,
 } from '../../utils/loanContractABI';
+import { erc20ABI } from '../../utils/erc20ABI';
 
 export function LoanList() {
   const [loan, setLoan] = useState<LoanItemData | null>(null);
@@ -34,6 +36,10 @@ export function LoanList() {
   });
   const {address, isConnected} = useAccount();
   const {data: walletClient} = useWalletClient();
+  const {data: tokenBalance} = useBalance({
+    address,
+    token: '0xf9E1CcC93c1b353888deF17506F95B5D5363D902',
+  });
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
@@ -204,6 +210,9 @@ export function LoanList() {
       <SafeAreaView style={styles.contentSection}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>Te prestamos</Text>
+          <Text style={[styles.balanceText, { color: colors.textSecondary }]}>
+            Balance: {tokenBalance ? `${parseFloat(tokenBalance.formatted).toFixed(4)} ${tokenBalance.symbol}` : '0.0000'}
+          </Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Instant crypto lending</Text>
         </View>
       
@@ -322,6 +331,12 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
+  },
+  balanceText: {
+    fontSize: 14,
+    textAlign: 'center',
+    fontWeight: '500',
+    marginBottom: 4,
   },
   statsContainer: {
     flexDirection: 'row',

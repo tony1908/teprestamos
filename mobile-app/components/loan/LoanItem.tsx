@@ -8,7 +8,9 @@ import {RequestModal} from './RequestModal';
 import {
   loanContractABI,
   LOAN_CONTRACT_ADDRESS,
+  TOKEN_CONTRACT_ADDRESS,
 } from '../../utils/loanContractABI';
+import { erc20ABI } from '../../utils/erc20ABI';
 
 export interface LoanItemData {
   amount: string;
@@ -46,27 +48,60 @@ export function LoanItem({loan, onUpdate}: Props) {
     try {
       const ethersProvider = new BrowserProvider(walletClient!);
       const signer = await ethersProvider.getSigner();
-      const contract = new Contract(
+      
+      // Check network
+      const network = await ethersProvider.getNetwork();
+      if (network.chainId !== 10143n) {
+        throw new Error(`Wrong network. Please switch to Monad Testnet (Chain ID: 10143). Currently on: ${network.chainId.toString()}`);
+      }
+      
+      // Create token contract instance
+      const tokenContract = new Contract(
+        TOKEN_CONTRACT_ADDRESS,
+        erc20ABI,
+        signer,
+      );
+      
+      // Create loan contract instance
+      const loanContract = new Contract(
         LOAN_CONTRACT_ADDRESS,
         loanContractABI,
         signer,
       );
-
-      const tx = await contract.payBackLoan({
-        value: loan.amount, // Pay back the exact amount
-      });
+      
+      // Check current allowance
+      const currentAllowance = await tokenContract.allowance(address, LOAN_CONTRACT_ADDRESS);
+      const loanAmount = BigInt(loan.amount);
+      
+      // If allowance is insufficient, approve first
+      if (currentAllowance < loanAmount) {
+        setData('Step 1/2: Approving token transfer...');
+        const approveTx = await tokenContract.approve(LOAN_CONTRACT_ADDRESS, loanAmount);
+        await approveTx.wait();
+        setData('Step 2/2: Paying back loan...');
+      } else {
+        setData('Paying back loan...');
+      }
+      
+      // Pay back the loan
+      const tx = await loanContract.payBackLoan(loanAmount);
+      await tx.wait();
       
       setData(
         `Loan paid back successfully! Transaction hash: ${tx.hash}\nAmount: ${ethers.formatEther(
           loan.amount,
-        )} MON`,
+        )} tokens`,
       );
       onUpdate();
     } catch (e: any) {
       console.error(e);
       setError(true);
-      if (e.message.includes('insufficient funds')) {
-        setData('Insufficient funds. You need the full loan amount plus gas fees to pay back.');
+      if (e.message.includes('insufficient funds') || e.message.includes('ERC20InsufficientBalance')) {
+        setData('Insufficient token balance. You need the full loan amount to pay back.');
+      } else if (e.message.includes('Wrong network')) {
+        setData(e.message);
+      } else if (e.message.includes('ERC20InsufficientAllowance')) {
+        setData('Insufficient token allowance. Please approve the transaction and try again.');
       } else {
         setData(`Error: ${e.message || 'Unknown error'}`);
       }
@@ -176,7 +211,7 @@ export function LoanItem({loan, onUpdate}: Props) {
       <View style={[styles.amountContainer, { backgroundColor: colors.backgroundSecondary }]}>
         <Text style={[styles.amountLabel, { color: colors.textSecondary }]}>Loan Amount</Text>
         <Text style={[styles.amount, { color: colors.primary, fontSize: getAmountFontSize() }]}>
-          {ethers.formatEther(loan.amount)} MON
+          {ethers.formatEther(loan.amount)} tokens
         </Text>
       </View>
 

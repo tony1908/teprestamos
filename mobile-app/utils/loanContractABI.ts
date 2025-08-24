@@ -1,34 +1,27 @@
 export const loanContractABI = [
     {
-        "inputs": [],
-        "name": "fundContract",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
-    },
-    {
-        "anonymous": false,
         "inputs": [
             {
-                "indexed": true,
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            },
-            {
-                "indexed": false,
                 "internalType": "uint256",
-                "name": "amount",
+                "name": "_amount",
                 "type": "uint256"
             }
         ],
-        "name": "FundsWithdrawn",
-        "type": "event"
+        "name": "fundContract",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_tokenAddress",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
     },
     {
         "anonymous": false,
@@ -110,7 +103,7 @@ export const loanContractABI = [
             },
             {
                 "indexed": false,
-                "internalType": "enum LoanContract.LoanStatus",
+                "internalType": "enum ERC20LoanContract.LoanStatus",
                 "name": "newStatus",
                 "type": "uint8"
             }
@@ -119,10 +112,16 @@ export const loanContractABI = [
         "type": "event"
     },
     {
-        "inputs": [],
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_amount",
+                "type": "uint256"
+            }
+        ],
         "name": "payBackLoan",
         "outputs": [],
-        "stateMutability": "payable",
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -142,6 +141,38 @@ export const loanContractABI = [
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "newToken",
+                "type": "address"
+            }
+        ],
+        "name": "TokenContractUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "TokensWithdrawn",
+        "type": "event"
     },
     {
         "inputs": [
@@ -164,7 +195,7 @@ export const loanContractABI = [
                 "type": "address"
             },
             {
-                "internalType": "enum LoanContract.LoanStatus",
+                "internalType": "enum ERC20LoanContract.LoanStatus",
                 "name": "_newStatus",
                 "type": "uint8"
             }
@@ -177,19 +208,28 @@ export const loanContractABI = [
     {
         "inputs": [
             {
-                "internalType": "uint256",
-                "name": "_amount",
-                "type": "uint256"
+                "internalType": "address",
+                "name": "_newTokenAddress",
+                "type": "address"
             }
         ],
-        "name": "withdrawFunds",
+        "name": "updateTokenContract",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "stateMutability": "payable",
-        "type": "receive"
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "withdrawTokens",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
     },
     {
         "inputs": [
@@ -212,7 +252,7 @@ export const loanContractABI = [
                 "type": "uint256"
             },
             {
-                "internalType": "enum LoanContract.LoanStatus",
+                "internalType": "enum ERC20LoanContract.LoanStatus",
                 "name": "status",
                 "type": "uint8"
             },
@@ -231,8 +271,78 @@ export const loanContractABI = [
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "getApprovalCalldata",
+        "outputs": [
+            {
+                "internalType": "bytes",
+                "name": "",
+                "type": "bytes"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "getContractBalance",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getTokenAddress",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_user",
+                "type": "address"
+            }
+        ],
+        "name": "getUserAllowance",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_user",
+                "type": "address"
+            }
+        ],
+        "name": "getUserTokenBalance",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -302,7 +412,7 @@ export const loanContractABI = [
                 "type": "uint256"
             },
             {
-                "internalType": "enum LoanContract.LoanStatus",
+                "internalType": "enum ERC20LoanContract.LoanStatus",
                 "name": "status",
                 "type": "uint8"
             },
@@ -315,6 +425,19 @@ export const loanContractABI = [
                 "internalType": "bool",
                 "name": "exists",
                 "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "loanToken",
+        "outputs": [
+            {
+                "internalType": "contract IERC20",
+                "name": "",
+                "type": "address"
             }
         ],
         "stateMutability": "view",
@@ -335,4 +458,5 @@ export const loanContractABI = [
     }
 ] as const;
 
-export const LOAN_CONTRACT_ADDRESS = '0x56aeB0d91ED01C1cfED201f252E16C90720F1961';
+export const LOAN_CONTRACT_ADDRESS = '0x3849A23b5422F475D2b4F7C3aD8080aeE638f4A0';
+export const TOKEN_CONTRACT_ADDRESS = '0xf9E1CcC93c1b353888deF17506F95B5D5363D902';
