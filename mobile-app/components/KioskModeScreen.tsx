@@ -117,7 +117,7 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
         setData(
           `✅ Loan payment successful!\n\nTransaction Hash: ${payTx.hash}\nAmount Paid: ${ethers.formatEther(
             defaultedLoan.amount,
-          )} tokens\n\n🔓 Device unlocking...`,
+          )} MXN\n\n🔓 Device unlocking...`,
         );
         paymentSuccessful = true;
         
@@ -139,7 +139,7 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
           setData(
             `✅ Loan payment successful!\n\nTransaction Hash: ${payTx.hash}\nAmount Paid: ${ethers.formatEther(
               defaultedLoan.amount,
-            )} tokens\n\n🔓 Device unlocking...`,
+            )} MXN\n\n🔓 Device unlocking...`,
           );
           paymentSuccessful = true;
           
@@ -252,7 +252,7 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
                 color: colors.textSecondary,
                 fontSize: Math.max(getAmountFontSize(loanAmount) * 0.375, 14) // Scale currency with amount but min 14px
               }
-            ]}>Tokens</Text>
+            ]}>MXN</Text>
           </View>
           <View style={[styles.walletContainer, { backgroundColor: colors.backgroundSecondary }]}>
             <Text style={[styles.walletLabel, { color: colors.textSecondary }]}>Wallet</Text>

@@ -36,7 +36,7 @@ export function LoanList() {
   });
   const {address, isConnected} = useAccount();
   const {data: walletClient} = useWalletClient();
-  const {data: tokenBalance} = useBalance({
+  const {data: tokenBalance, refetch: refetchBalance} = useBalance({
     address,
     token: '0xf9E1CcC93c1b353888deF17506F95B5D5363D902',
   });
@@ -195,6 +195,13 @@ export function LoanList() {
   const handleLoanUpdated = () => {
     loadLoan();
     loadContractStats();
+    refetchBalance?.();
+  };
+
+  const handleRefresh = () => {
+    loadLoan();
+    loadContractStats();
+    refetchBalance?.();
   };
 
   return (
@@ -210,9 +217,14 @@ export function LoanList() {
       <SafeAreaView style={styles.contentSection}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>Te prestamos</Text>
-          <Text style={[styles.balanceText, { color: colors.textSecondary }]}>
-            Balance: {tokenBalance ? `${parseFloat(tokenBalance.formatted).toFixed(4)} ${tokenBalance.symbol}` : '0.0000'}
-          </Text>
+          <View style={[styles.balanceCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.balanceHeader}>
+              <Text style={[styles.balanceLabel, { color: colors.textSecondary }]}>💰 Your Balance</Text>
+            </View>
+            <Text style={[styles.balanceAmount, { color: colors.text }]}>
+              {tokenBalance ? `${parseFloat(tokenBalance.value.toString()) / 1e18} MXN` : '0.0000 MXN'}
+            </Text>
+          </View>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Instant crypto lending</Text>
         </View>
       
@@ -258,7 +270,7 @@ export function LoanList() {
       <ScrollView
         style={styles.scrollView}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={loadLoan} />
+          <RefreshControl refreshing={loading} onRefresh={handleRefresh} />
         }>
         
         {loan && (
@@ -332,11 +344,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-  balanceText: {
+  balanceCard: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    marginVertical: 12,
+    marginHorizontal: 24,
+    borderWidth: 1,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  balanceHeader: {
+    marginBottom: 8,
+  },
+  balanceLabel: {
     fontSize: 14,
-    textAlign: 'center',
     fontWeight: '500',
-    marginBottom: 4,
+    textAlign: 'center',
+  },
+  balanceAmount: {
+    fontSize: 24,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   statsContainer: {
     flexDirection: 'row',

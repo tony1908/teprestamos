@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a React Native Expo app called "Te Prestamos" - a decentralized lending platform built for the Monad blockchain testnet. Users can request instant MON token loans with flexible repayment terms.
+This is a React Native Expo app called "Te Prestamos" - a decentralized lending platform built for the Monad blockchain testnet. Users can request instant MXN (Mexican Peso-pegged) token loans with flexible repayment terms.
 
 **Key Technologies:**
 - **Frontend**: React Native with Expo Router (file-based routing)
@@ -59,19 +59,22 @@ The app uses a **dual Web3 stack approach**:
 ### Smart Contract Integration
 
 **Contract Details**:
-- **Address**: `0x56aeB0d91ED01C1cfED201f252E16C90720F1961`
-- **ABI**: Defined in `utils/loanContractABI.ts`
+- **Loan Contract Address**: `0x3849A23b5422F475D2b4F7C3aD8080aeE638f4A0`
+- **Token Contract Address**: `0xf9E1CcC93c1b353888deF17506F95B5D5363D902` (MXN-pegged ERC20)
+- **ABI**: Defined in `utils/loanContractABI.ts` and `utils/erc20ABI.ts`
 - **Network**: Monad Testnet (Chain ID: 10143)
 
 **Core Functions**:
 - `requestLoan(uint256 amount, uint256 maxPaymentDate)` - Request and receive instant loan
-- `payBackLoan() payable` - Repay the loan amount
+- `payBackLoan(uint256 amount)` - Repay the loan amount with ERC20 tokens
 - `getActiveLoan(address borrower)` - Get user's active loan details
 - `getContractBalance()` - Get available contract funds
+- `getUserTokenBalance(address user)` - Get user's token balance
+- `getUserAllowance(address user)` - Get user's token allowance for the contract
 
 **Loan Status Enum**:
 ```solidity
-enum LoanStatus { ACTIVE, OVERDUE, PAID, DEFAULTED }
+enum ERC20LoanContract.LoanStatus { ACTIVE, OVERDUE, PAID, DEFAULTED }
 ```
 - **0 (ACTIVE)**: Loan approved and funded, can be repaid
 - **1 (OVERDUE)**: Loan past due date, can still be repaid
@@ -109,10 +112,21 @@ Each component manages its own transaction state:
 // Convert wagmi walletClient to ethers provider
 const ethersProvider = new BrowserProvider(walletClient!);
 const signer = await ethersProvider.getSigner();
-const contract = new Contract(ADDRESS, ABI, signer);
 
-// Execute contract method
-const tx = await contract.methodName(params, { value: ethAmount });
+// For loan contract interactions
+const loanContract = new Contract(LOAN_CONTRACT_ADDRESS, loanContractABI, signer);
+
+// For token operations (approvals, transfers)
+const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS, erc20ABI, signer);
+
+// ERC20 Payment Pattern (approve + pay)
+const loanAmount = BigInt(amount);
+const currentAllowance = await tokenContract.allowance(address, LOAN_CONTRACT_ADDRESS);
+if (currentAllowance < loanAmount) {
+  const approveTx = await tokenContract.approve(LOAN_CONTRACT_ADDRESS, loanAmount);
+  await approveTx.wait();
+}
+const payTx = await loanContract.payBackLoan(loanAmount);
 ```
 
 ## Important Configuration
@@ -158,7 +172,7 @@ const tx = await contract.methodName(params, { value: ethAmount });
 **Instant Loan Approval**:
 - `requestLoan()` method immediately approves and transfers funds to borrower
 - No waiting period or manual approval process
-- Users receive MON tokens instantly upon transaction confirmation
+- Users receive MXN tokens instantly upon transaction confirmation
 
 **Single Active Loan Policy**:
 - Users can only have one active loan at a time
@@ -168,7 +182,8 @@ const tx = await contract.methodName(params, { value: ethAmount });
 **Loan Management**:
 - Automatic overdue detection based on `maxPaymentDate`
 - Visual indicators for loan status (Active, Overdue, Paid, Defaulted)
-- Flexible repayment terms (1-30 days, up to 10 MON)
+- Flexible repayment terms (1-30 days, up to 10 MXN)
+- **ERC20 Repayment Flow**: Requires token approval before payment execution
 
 **UI/UX Patterns**:
 - Instant feedback for all loan operations
@@ -232,11 +247,12 @@ The app implements a comprehensive kiosk mode system that locks the device when 
 
 **Payment Flow from Kiosk Mode**:
 1. User attempts payment from locked screen
-2. Multiple payment strategies attempted:
+2. **ERC20 Token Approval**: Check and approve token allowance if needed
+3. Multiple payment strategies attempted:
    - Direct payment to contract
    - Status update to overdue → payment (for defaulted loans)
-3. Comprehensive error handling with user-friendly messages
-4. Automatic unlock after successful payment confirmation
+4. Comprehensive error handling with user-friendly messages
+5. Automatic unlock after successful payment confirmation
 
 **Auto-Unlock System**:
 - Multi-layer unlock mechanism after successful payment
@@ -294,6 +310,8 @@ const useKioskMode = () => {
 
 **Payment Security**:
 - All contract interactions verify Monad Testnet (Chain ID: 10143)
+- **ERC20 Token Security**: Proper allowance management and approval verification
+- **Dual Contract Architecture**: Separate loan contract and token contract interactions
 - Proper gas estimation and fee handling
 - Transaction confirmation before kiosk mode disable
 

@@ -90,7 +90,7 @@ export function LoanItem({loan, onUpdate}: Props) {
       setData(
         `Loan paid back successfully! Transaction hash: ${tx.hash}\nAmount: ${ethers.formatEther(
           loan.amount,
-        )} tokens`,
+        )} MXN`,
       );
       onUpdate();
     } catch (e: any) {
@@ -211,7 +211,7 @@ export function LoanItem({loan, onUpdate}: Props) {
       <View style={[styles.amountContainer, { backgroundColor: colors.backgroundSecondary }]}>
         <Text style={[styles.amountLabel, { color: colors.textSecondary }]}>Loan Amount</Text>
         <Text style={[styles.amount, { color: colors.primary, fontSize: getAmountFontSize() }]}>
-          {ethers.formatEther(loan.amount)} tokens
+          {ethers.formatEther(loan.amount)} MXN
         </Text>
       </View>
 
