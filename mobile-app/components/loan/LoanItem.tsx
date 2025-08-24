@@ -144,6 +144,16 @@ export function LoanItem({loan, onUpdate}: Props) {
     }
   };
 
+  const getAmountFontSize = () => {
+    const formattedAmount = ethers.formatEther(loan.amount);
+    const amountLength = formattedAmount.replace('.', '').length;
+    
+    if (amountLength <= 4) return 28;
+    if (amountLength <= 6) return 24;
+    if (amountLength <= 8) return 20;
+    return 16;
+  };
+
   return (
     <View style={[
       styles.container, 
@@ -165,7 +175,7 @@ export function LoanItem({loan, onUpdate}: Props) {
       
       <View style={[styles.amountContainer, { backgroundColor: colors.backgroundSecondary }]}>
         <Text style={[styles.amountLabel, { color: colors.textSecondary }]}>Loan Amount</Text>
-        <Text style={[styles.amount, { color: colors.primary }]}>
+        <Text style={[styles.amount, { color: colors.primary, fontSize: getAmountFontSize() }]}>
           {ethers.formatEther(loan.amount)} MON
         </Text>
       </View>

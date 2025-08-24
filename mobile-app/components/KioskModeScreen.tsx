@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccount, useWalletClient } from 'wagmi';
 import { BrowserProvider, Contract, ethers } from 'ethers';
@@ -10,11 +10,12 @@ import { ThemedView } from '@/components/ThemedView';
 import { RequestModal } from './loan/RequestModal';
 import { loanContractABI, LOAN_CONTRACT_ADDRESS } from '@/utils/loanContractABI';
 import { Colors } from '@/constants/Colors';
+import { loginImage } from '@/constants/Images';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 interface KioskModeScreenProps {
   loanAmount: string;
-  onPaymentRequired: () => void;
+  onPaymentRequired?: () => void;
 }
 
 
@@ -25,6 +26,16 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
   const { defaultedLoan, checkLoanStatus } = useKioskContext();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+
+  // Safety check for required props
+  if (!loanAmount) {
+    console.error('KioskModeScreen: loanAmount is required but was not provided');
+    return (
+      <SafeAreaView style={[{ flex: 1, justifyContent: 'center', alignItems: 'center' }, { backgroundColor: colors.backgroundSecondary }]}>
+        <Text style={[{ fontSize: 18, color: colors.error }]}>Error: Loan amount not available</Text>
+      </SafeAreaView>
+    );
+  }
 
   // Dynamic font size based on amount length
   const getAmountFontSize = (amount: string) => {
@@ -185,17 +196,19 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
-      <View style={styles.content}>
+    <View style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
+      <View style={styles.imageContainer}>
+        <Image 
+          source={{ uri: `data:image/png;base64,${loginImage}` }}
+          style={styles.kioskImage}
+          resizeMode="cover"
+        />
+      </View>
+      
+      <SafeAreaView style={styles.contentSection}>
+        <View style={styles.content}>
         {/* Header Section */}
         <View style={styles.header}>
-          <View style={[styles.statusIcon, { 
-            backgroundColor: isDefaulted ? colors.error : isOverdue ? colors.warning : colors.error 
-          }]}>
-            <Text style={styles.statusIconText}>
-              {isDefaulted ? '🚫' : isOverdue ? '⏰' : '🔒'}
-            </Text>
-          </View>
           
           <Text style={[styles.title, { color: colors.text }]}>Device Locked</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -276,8 +289,9 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
             {Platform.OS === 'android' ? 'Kiosk mode active' : 'iOS compatibility mode'}
           </Text>
         </View>
-      </View>
-
+        </View>
+      </SafeAreaView>
+      
       <RequestModal
         isVisible={requestModalVisible}
         isLoading={isLoading}
@@ -285,51 +299,63 @@ export default function KioskModeScreen({ loanAmount, onPaymentRequired }: Kiosk
         rpcError={error ? 'Error processing payment from kiosk mode' : undefined}
         onClose={() => setRequestModalVisible(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? 0 : 0,
+  },
+  imageContainer: {
+    width: '100%',
+    height: '30%',
+  },
+  kioskImage: {
+    width: '100%',
+    height: '100%',
+  },
+  contentSection: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    marginTop: -30,
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingVertical: 16,
     justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 32,
   },
   statusIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   statusIconText: {
     fontSize: 36,
   },
   title: {
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: 'center',
     fontWeight: '500',
   },
   amountCard: {
-    padding: 24,
+    padding: 20,
     borderRadius: 16,
-    marginBottom: 32,
+    marginBottom: 24,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -381,11 +407,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   payButton: {
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 20,
   },
   payButtonText: {
     color: '#FFFFFF',
@@ -393,9 +419,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   instructionsCard: {
-    padding: 24,
-    borderRadius: 16,
-    marginBottom: 24,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -415,12 +441,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emergencyButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
     alignItems: 'center',
     borderWidth: 1,
-    marginBottom: 32,
+    marginBottom: 16,
   },
   emergencyButtonText: {
     fontSize: 16,

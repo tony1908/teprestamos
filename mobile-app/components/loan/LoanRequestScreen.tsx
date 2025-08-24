@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Modal,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {BrowserProvider, Contract, ethers} from 'ethers';
@@ -32,6 +31,11 @@ export function LoanRequestScreen({visible, onClose, onLoanCreated}: Props) {
   const [error, setError] = useState(false);
   const {address, isConnected} = useAccount();
   const {data: walletClient} = useWalletClient();
+
+  // Debug logging for modal visibility
+  React.useEffect(() => {
+    console.log('LoanRequestScreen visibility changed:', visible);
+  }, [visible]);
 
   const requestLoan = async () => {
     if (!walletClient || !amount.trim() || !days.trim() || !address) {
@@ -111,8 +115,12 @@ export function LoanRequestScreen({visible, onClose, onLoanCreated}: Props) {
     }
   };
 
+  if (!visible) {
+    return null;
+  }
+
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} presentationStyle="overFullScreen">
+    <>
       <View style={styles.overlay}>
         <TouchableOpacity 
           style={styles.overlayTouchable} 
@@ -120,110 +128,110 @@ export function LoanRequestScreen({visible, onClose, onLoanCreated}: Props) {
           onPress={onClose}
         />
         <View style={styles.bottomSheet}>
-          <SafeAreaView style={styles.safeArea}>
-          {/* Handle bar */}
-          <View style={styles.handleBar} />
-          
-          <ScrollView 
-            style={styles.scrollView} 
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            {/* Header with title */}
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>Request Your Loan</Text>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Content */}
-            <View style={styles.content}>
-            <Text style={styles.subtitle}>Get instant crypto loans with flexible terms</Text>
+            <SafeAreaView style={styles.safeArea}>
+            {/* Handle bar */}
+            <View style={styles.handleBar} />
             
-            {/* Amount Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Loan Amount</Text>
-              <Text style={styles.helperText}>Maximum: 10 MON</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={[styles.input, !isValidAmount() && styles.invalidInput]}
-                  value={amount}
-                  onChangeText={setAmount}
-                  placeholder="0.1"
-                  keyboardType="decimal-pad"
-                />
-                <Text style={styles.currency}>MON</Text>
+            <ScrollView 
+              style={styles.scrollView} 
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+            >
+              {/* Header with title */}
+              <View style={styles.header}>
+                <Text style={styles.headerTitle}>Request Your Loan</Text>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <Text style={styles.closeButtonText}>✕</Text>
+                </TouchableOpacity>
               </View>
-            </View>
-            
-            {/* Duration Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Loan Duration</Text>
-              <Text style={styles.helperText}>Maximum: 30 days</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={[styles.input, !isValidDays() && styles.invalidInput]}
-                  value={days}
-                  onChangeText={setDays}
-                  placeholder="7"
-                  keyboardType="number-pad"
-                />
-                <Text style={styles.currency}>Days</Text>
-              </View>
-            </View>
 
-            {/* Info Cards */}
-            <View style={styles.infoCards}>
-              <View style={styles.infoCard}>
-                <Text style={styles.infoCardTitle}>Instant Approval</Text>
-                <Text style={styles.infoCardText}>Your loan is approved and funded immediately</Text>
+              {/* Content */}
+              <View style={styles.content}>
+              <Text style={styles.subtitle}>Get instant crypto loans with flexible terms</Text>
+              
+              {/* Amount Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Loan Amount</Text>
+                <Text style={styles.helperText}>Maximum: 10 MON</Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={[styles.input, !isValidAmount() && styles.invalidInput]}
+                    value={amount}
+                    onChangeText={setAmount}
+                    placeholder="0.1"
+                    keyboardType="decimal-pad"
+                  />
+                  <Text style={styles.currency}>MON</Text>
+                </View>
               </View>
               
-              <View style={styles.infoCard}>
-                <Text style={styles.infoCardTitle}>No Credit Check</Text>
-                <Text style={styles.infoCardText}>Blockchain-based lending without traditional requirements</Text>
+              {/* Duration Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Loan Duration</Text>
+                <Text style={styles.helperText}>Maximum: 30 days</Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={[styles.input, !isValidDays() && styles.invalidInput]}
+                    value={days}
+                    onChangeText={setDays}
+                    placeholder="7"
+                    keyboardType="number-pad"
+                  />
+                  <Text style={styles.currency}>Days</Text>
+                </View>
               </View>
-              
-              <View style={styles.infoCard}>
-                <Text style={styles.infoCardTitle}>Flexible Terms</Text>
-                <Text style={styles.infoCardText}>Choose your amount and duration to fit your needs</Text>
+
+              {/* Info Cards */}
+              <View style={styles.infoCards}>
+                <View style={styles.infoCard}>
+                  <Text style={styles.infoCardTitle}>Instant Approval</Text>
+                  <Text style={styles.infoCardText}>Your loan is approved and funded immediately</Text>
+                </View>
+                
+                <View style={styles.infoCard}>
+                  <Text style={styles.infoCardTitle}>No Credit Check</Text>
+                  <Text style={styles.infoCardText}>Blockchain-based lending without traditional requirements</Text>
+                </View>
+                
+                <View style={styles.infoCard}>
+                  <Text style={styles.infoCardTitle}>Flexible Terms</Text>
+                  <Text style={styles.infoCardText}>Choose your amount and duration to fit your needs</Text>
+                </View>
               </View>
-            </View>
 
-            {/* Action Buttons */}
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.primaryButton,
-                  (!isValidAmount() || !isValidDays() || isLoading || !isConnected) &&
-                    styles.disabledButton,
-                ]}
-                onPress={requestLoan}
-                disabled={!isValidAmount() || !isValidDays() || isLoading || !isConnected}>
-                <Text style={styles.primaryButtonText}>
-                  {isLoading ? 'Processing...' : !isConnected ? 'Connect Wallet' : 'Get Loan Now'}
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.secondaryButton} onPress={onClose}>
-                <Text style={styles.secondaryButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
+              {/* Action Buttons */}
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.primaryButton,
+                    (!isValidAmount() || !isValidDays() || isLoading || !isConnected) &&
+                      styles.disabledButton,
+                  ]}
+                  onPress={requestLoan}
+                  disabled={!isValidAmount() || !isValidDays() || isLoading || !isConnected}>
+                  <Text style={styles.primaryButtonText}>
+                    {isLoading ? 'Processing...' : !isConnected ? 'Connect Wallet' : 'Get Loan Now'}
+                  </Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.secondaryButton} onPress={onClose}>
+                  <Text style={styles.secondaryButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
 
-            {/* Terms and Conditions */}
-            <View style={styles.termsContainer}>
-              <Text style={styles.termsTitle}>Important Terms:</Text>
-              <Text style={styles.termsText}>• One active loan per user</Text>
-              <Text style={styles.termsText}>• Pay back before due date to avoid penalties</Text>
-              <Text style={styles.termsText}>• Funds are transferred immediately upon approval</Text>
-              <Text style={styles.termsText}>• All transactions are secured on the blockchain</Text>
-            </View>
-            </View>
-          </ScrollView>
-          </SafeAreaView>
+              {/* Terms and Conditions */}
+              <View style={styles.termsContainer}>
+                <Text style={styles.termsTitle}>Important Terms:</Text>
+                <Text style={styles.termsText}>• One active loan per user</Text>
+                <Text style={styles.termsText}>• Pay back before due date to avoid penalties</Text>
+                <Text style={styles.termsText}>• Funds are transferred immediately upon approval</Text>
+                <Text style={styles.termsText}>• All transactions are secured on the blockchain</Text>
+              </View>
+              </View>
+            </ScrollView>
+            </SafeAreaView>
+          </View>
         </View>
-      </View>
 
       <RequestModal
         isVisible={requestModalVisible}
@@ -232,15 +240,20 @@ export function LoanRequestScreen({visible, onClose, onLoanCreated}: Props) {
         rpcError={error ? 'Error processing loan' : undefined}
         onClose={() => setRequestModalVisible(false)}
       />
-    </Modal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     paddingTop: 80,
+    zIndex: 1000,
   },
   overlayTouchable: {
     height: 80,
@@ -262,6 +275,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 12,
     elevation: 16,
+    marginTop: 80,
   },
   safeArea: {
     flex: 1,

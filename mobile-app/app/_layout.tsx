@@ -116,21 +116,22 @@ function MainApp() {
   console.log('MainApp - isKioskModeActive:', isKioskModeActive, 'defaultedLoan status:', defaultedLoan?.status);
   
   if (isKioskModeActive && defaultedLoan) {
+    // Safety check for loan amount
+    const formattedAmount = defaultedLoan.amount ? ethers.formatEther(defaultedLoan.amount) : '0';
+    
     return (
       <KioskModeScreen
-        loanAmount={ethers.formatEther(defaultedLoan.amount)}
+        loanAmount={formattedAmount}
         onPaymentRequired={handlePaymentAttempt}
       />
     );
   }
 
   return (
-    <>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </>
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="+not-found" />
+    </Stack>
   );
 }
 

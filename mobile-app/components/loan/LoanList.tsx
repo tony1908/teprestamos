@@ -7,9 +7,11 @@ import {
   RefreshControl,
   TouchableOpacity,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
+import { loansImage } from '@/constants/Images';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import {BrowserProvider, Contract, ethers} from 'ethers';
 import {useAccount, useWalletClient} from 'wagmi';
@@ -82,7 +84,8 @@ export function LoanList() {
       clearTimeout(timeoutId);
       console.log('Got user loan:', userLoan);
       
-      if (userLoan.amount > 0) {
+      // Only consider it an active loan if amount > 0 AND status is Active (0) or Overdue (1)
+      if (userLoan.amount > 0 && (Number(userLoan.status) === 0 || Number(userLoan.status) === 1)) {
         const formattedLoan: LoanItemData = {
           amount: userLoan.amount.toString(),
           maxPaymentDate: Number(userLoan.maxPaymentDate),
@@ -91,9 +94,10 @@ export function LoanList() {
           isOverdue: userLoan.isOverdue,
         };
 
-        console.log('Formatted loan:', formattedLoan);
+        console.log('Formatted active loan:', formattedLoan);
         setLoan(formattedLoan);
       } else {
+        console.log('No active loan - amount:', userLoan.amount.toString(), 'status:', Number(userLoan.status));
         setLoan(null);
       }
       setError(null);
@@ -171,6 +175,10 @@ export function LoanList() {
     }
   }, [isConnected, walletClient, address, loadLoan, loadContractStats]);
 
+  useEffect(() => {
+    console.log('showLoanRequestScreen state changed:', showLoanRequestScreen);
+  }, [showLoanRequestScreen]);
+
   const handleLoanCreated = () => {
     loadLoan();
     loadContractStats();
@@ -184,36 +192,40 @@ export function LoanList() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Te prestamos</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Instant crypto lending</Text>
+    <View style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
+      <View style={styles.imageContainer}>
+        <Image 
+          source={{ uri: `data:image/png;base64,${loansImage}` }}
+          style={styles.loanImage}
+          resizeMode="cover"
+        />
       </View>
       
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[
-            styles.createButton, 
-            { backgroundColor: loan ? colors.border : colors.primary },
-            loan && styles.disabledButton
-          ]}
-          onPress={() => setShowLoanRequestScreen(true)}
-          disabled={!!loan}>
-          <Text style={[styles.createButtonText, { color: loan ? colors.textSecondary : '#FFFFFF' }]}>
-            + Get Loan
-          </Text>
-        </TouchableOpacity>
-        
-
-      </View>
-
-      {loan && (
-        <View style={[styles.warningContainer, { backgroundColor: colors.warning + '15', borderColor: colors.warning }]}>
-          <Text style={[styles.warningText, { color: colors.warning }]}>
-            You can only have one active loan at a time. Pay back your current loan to get a new one.
-          </Text>
+      <SafeAreaView style={styles.contentSection}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text }]}>Te prestamos</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Instant crypto lending</Text>
+        </View>
+      
+      {!loan && (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.createButton, { backgroundColor: colors.primary }]}
+            activeOpacity={0.8}
+            onPress={() => {
+              console.log('Get Loan button pressed - setting showLoanRequestScreen to true');
+              console.log('Current showLoanRequestScreen state:', showLoanRequestScreen);
+              setShowLoanRequestScreen(true);
+            }}>
+            <Text style={[styles.createButtonText, { color: '#FFFFFF' }]}>
+              + Get Loan
+            </Text>
+          </TouchableOpacity>
+          
         </View>
       )}
+
+
 
       {error && (
         <View style={[styles.errorContainer, { backgroundColor: colors.error + '15', borderColor: colors.error }]}>
@@ -265,24 +277,40 @@ export function LoanList() {
         )}
       </ScrollView>
 
+      </SafeAreaView>
+      
       <LoanRequestScreen
         visible={showLoanRequestScreen}
-        onClose={() => setShowLoanRequestScreen(false)}
+        onClose={() => {
+          console.log('Closing LoanRequestScreen');
+          setShowLoanRequestScreen(false);
+        }}
         onLoanCreated={handleLoanCreated}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? 0 : 0,
+  },
+  imageContainer: {
+    width: '100%',
+    height: '30%',
+  },
+  loanImage: {
+    width: '100%',
+    height: '100%',
+  },
+  contentSection: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   header: {
     paddingHorizontal: 24,
-    paddingVertical: 20,
-    paddingTop: 32,
+    paddingVertical: 16,
+    paddingTop: 8,
     alignItems: 'center',
   },
   title: {
