@@ -338,11 +338,12 @@ interface OnboardingContextType {
 - OnboardingProvider wraps entire app at root level
 - OnboardingGate component controls access based on completion status
 - Conditional rendering: Onboarding flow → Main app (with KioskProvider)
+- **Automatic Reset**: Onboarding automatically resets when wallet disconnects (useEffect monitors `isConnected` state)
 
 ### Palenca Integration
 
 **Configuration**:
-- **Widget ID**: `89e7edf3-02fb-4b79-95fa-d9f52a63d837`
+- **Widget ID**: Configurable via props (default empty string for user-specific assignment)
 - **Base URL**: `https://connect.palenca.com`
 - **Primary Color**: `#ea4c89` (pink theme matching Te Prestamos branding)
 
@@ -352,16 +353,22 @@ const handleEvent = (event: any) => {
   const eventData = JSON.parse(event.nativeEvent.data);
   
   switch (eventData.signal) {
-    case 'ready':           // Widget initialized
-    case 'user_created':    // User creation successful → onSuccess()
+    case 'ready':              // Widget initialized
+    case 'user_created':       // User creation - DON'T trigger onSuccess yet
     case 'connection_success': // Bank connection successful → onSuccess()
     case 'connection_error':   // Connection failed → onError()
   }
 };
 ```
 
+**Critical Event Flow Fix**:
+- **Previous Issue**: `onSuccess()` was called on `user_created` event (when user just entered email/phone)
+- **Current Fix**: Only `connection_success` triggers `onSuccess()` - ensures full authentication completion
+- **Result**: Users must complete password/OTP verification before onboarding proceeds
+
 **WebView Implementation**:
-- Full-screen embedded widget with loading states
+- Optimized height with `maxHeight: 500px` to reduce scrolling while maintaining accessibility
+- Compact header design with reduced padding and font sizes
 - Proper event parsing according to Palenca envelope structure
 - Error handling with retry/skip options
 - Console logging for debugging connection flow
@@ -381,10 +388,11 @@ const handleEvent = (event: any) => {
 
 ### Development & Testing
 
-**Reset Functionality**:
-- Reset onboarding button in Profile tab under "Development Options"
-- Clears both `onboarding_completed` and `palenca_connected` AsyncStorage keys
-- Requires app restart to see onboarding flow again
+**Automatic Reset Functionality**:
+- Onboarding automatically resets when user disconnects wallet via AppKit button
+- Clears both `onboarding_completed` and `palenca_connected` AsyncStorage keys immediately
+- User is redirected to login screen and must complete both wallet connection and Palenca setup again
+- No manual reset button needed - logout triggers automatic onboarding reset
 
 **Error Handling**:
 - Network timeout protection for Palenca widget loading
@@ -396,7 +404,8 @@ const handleEvent = (event: any) => {
 - Onboarding gate runs before KioskProvider initialization
 - Maintains all existing kiosk mode functionality after onboarding
 - LoginScreen updated with Te Prestamos branding and step indicators
-- Profile screen includes development tools for testing onboarding flow
+- Profile screen simplified - removed manual reset button in favor of automatic reset on logout
+- Seamless integration with wallet disconnect events for automatic onboarding reset
 
 ### Security Considerations
 

@@ -96,7 +96,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           <Text style={[styles.progressText, { color: colors.textSecondary }]}>Step 2 of 2</Text>
         </View>
         
-        <View style={styles.stepHeader}>
+        <View style={styles.stepHeaderCompact}>
           <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
             <Text style={styles.iconText}>2</Text>
           </View>
@@ -182,6 +182,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 32,
   },
+  stepHeaderCompact: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   iconContainer: {
     width: 56,
     height: 56,
@@ -221,7 +225,8 @@ const styles = StyleSheet.create({
   },
   palencaContainer: {
     flex: 1,
-    marginTop: 16,
+    marginTop: 8,
+    maxHeight: 500,
   },
   completeContainer: {
     flex: 1,

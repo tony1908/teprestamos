@@ -11,7 +11,7 @@ interface PalencaConnectProps {
 const PalencaConnect: React.FC<PalencaConnectProps> = ({ 
   onSuccess, 
   onError, 
-  widgetId = '89e7edf3-02fb-4b79-95fa-d9f52a63d837' 
+  widgetId = '' 
 }) => {
   const [loading, setLoading] = useState(true);
 
@@ -27,11 +27,11 @@ const PalencaConnect: React.FC<PalencaConnectProps> = ({
           console.log('Palenca widget is ready');
           break;
         case 'user_created':
-          console.log('Palenca user created successfully');
-          onSuccess();
+          console.log('Palenca user created successfully - waiting for connection');
+          // Don't call onSuccess() here - user still needs to complete authentication
           break;
         case 'connection_success':
-          console.log('Palenca connection successful');
+          console.log('Palenca connection successful:', eventData.response);
           onSuccess();
           break;
         case 'connection_error':
@@ -89,21 +89,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    padding: 20,
+    padding: 16,
     backgroundColor: '#f8f9fa',
     borderBottomWidth: 1,
     borderBottomColor: '#e9ecef',
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
-    lineHeight: 22,
+    lineHeight: 20,
   },
   webview: {
     flex: 1,
