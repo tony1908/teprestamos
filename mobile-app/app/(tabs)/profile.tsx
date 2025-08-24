@@ -1,7 +1,8 @@
 import { AppKitButton } from '@reown/appkit-wagmi-react-native';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Alert } from 'react-native';
 import { useAccount } from 'wagmi';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -10,6 +11,25 @@ import { ThemedView } from '@/components/ThemedView';
 
 export default function ProfileScreen() {
   const { address } = useAccount();
+  const { resetOnboarding } = useOnboarding();
+
+  const handleResetOnboarding = () => {
+    Alert.alert(
+      'Reset Onboarding',
+      'This will reset the onboarding flow. You will need to complete wallet connection and Palenca setup again.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Reset', 
+          style: 'destructive',
+          onPress: async () => {
+            await resetOnboarding();
+            Alert.alert('Success', 'Onboarding has been reset. Please restart the app.');
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <ParallaxScrollView
@@ -65,6 +85,13 @@ export default function ProfileScreen() {
       <View style={styles.walletContainer}>
         <ThemedText style={styles.walletTitle}>Wallet Management</ThemedText>
         <AppKitButton connectStyle={styles.appKitButton} />
+      </View>
+
+      <View style={styles.developmentContainer}>
+        <ThemedText style={styles.developmentTitle}>Development Options</ThemedText>
+        <TouchableOpacity style={styles.resetButton} onPress={handleResetOnboarding}>
+          <ThemedText style={styles.resetButtonText}>Reset Onboarding</ThemedText>
+        </TouchableOpacity>
       </View>
     </ParallaxScrollView>
   );
@@ -152,5 +179,30 @@ const styles = StyleSheet.create({
   },
   appKitButton: {
     marginTop: 8,
+  },
+  developmentContainer: {
+    padding: 20,
+    alignItems: 'center',
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  developmentTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+    textAlign: 'center',
+    color: '#666',
+  },
+  resetButton: {
+    backgroundColor: '#ff6b6b',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  resetButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });

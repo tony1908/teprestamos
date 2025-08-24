@@ -16,9 +16,11 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { View } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import LoginScreen from '@/components/LoginScreen';
 import { KioskProvider, useKioskContext } from '@/contexts/KioskContext';
+import { OnboardingProvider, useOnboarding } from '@/contexts/OnboardingContext';
+import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 import KioskModeScreen from '@/components/KioskModeScreen';
 import { ethers } from 'ethers';
 
@@ -57,10 +59,30 @@ createAppKit({
 });
 
 function AppContent() {
+  return (
+    <OnboardingProvider>
+      <OnboardingGate />
+    </OnboardingProvider>
+  );
+}
+
+function OnboardingGate() {
+  const { hasCompletedOnboarding, isLoading, completeOnboarding } = useOnboarding();
   const { isConnected } = useAccount();
-  
-  if (!isConnected) {
-    return <LoginScreen />;
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#ea4c89" />
+      </View>
+    );
+  }
+
+  if (!hasCompletedOnboarding) {
+    if (!isConnected) {
+      return <LoginScreen />;
+    }
+    return <OnboardingFlow onComplete={completeOnboarding} />;
   }
 
   return (

@@ -14,33 +14,33 @@ export default function LoginScreen() {
       
       <ThemedView style={styles.contentContainer}>
         <ThemedView style={styles.titleContainer}>
-          <ThemedText type="title">Welcome to Monad Todo</ThemedText>
+          <ThemedText type="title">Welcome to Te Prestamos</ThemedText>
           <HelloWave />
         </ThemedView>
         
         <ThemedView style={styles.descriptionContainer}>
           <ThemedText style={styles.descriptionText}>
-            Create todos and stake MON tokens to commit to completing them. Complete your todos to get your stake back!
+            Get instant MON token loans with flexible repayment terms on the Monad blockchain.
           </ThemedText>
         </ThemedView>
         
         <ThemedView style={styles.featuresContainer}>
           <View style={styles.featureItem}>
-            <ThemedText style={styles.featureIcon}>🎯</ThemedText>
-            <ThemedText style={styles.featureText}>Stake MON tokens on your commitments</ThemedText>
+            <ThemedText style={styles.featureIcon}>⚡</ThemedText>
+            <ThemedText style={styles.featureText}>Instant loan approval and funding</ThemedText>
           </View>
           <View style={styles.featureItem}>
-            <ThemedText style={styles.featureIcon}>✅</ThemedText>
-            <ThemedText style={styles.featureText}>Complete todos to retrieve your stake</ThemedText>
+            <ThemedText style={styles.featureIcon}>💰</ThemedText>
+            <ThemedText style={styles.featureText}>Flexible repayment terms (1-30 days)</ThemedText>
           </View>
           <View style={styles.featureItem}>
-            <ThemedText style={styles.featureIcon}>🚀</ThemedText>
-            <ThemedText style={styles.featureText}>Stay motivated and accountable</ThemedText>
+            <ThemedText style={styles.featureIcon}>🔒</ThemedText>
+            <ThemedText style={styles.featureText}>Secure decentralized lending platform</ThemedText>
           </View>
         </ThemedView>
         
         <View style={styles.connectContainer}>
-          <ThemedText style={styles.connectTitle}>Connect your wallet to get started</ThemedText>
+          <ThemedText style={styles.connectTitle}>Step 1: Connect your wallet to continue</ThemedText>
           <AppKitButton 
             connectStyle={styles.appKitButton} 
             label='Connect Wallet'
